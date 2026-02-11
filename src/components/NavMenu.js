@@ -36,6 +36,7 @@ export default function NavMenu() {
           { path: "/Ver_aportaciones", label: "Ver Aportaciones Voluntarias" },
           { path: "/Registro_Salidas", label: "Registrar Salida" },
           { path: "/Ver_salidas", label: "Ver Salidas" },
+          { path: "/Registro_Pcontratos", label: "Registrar Pago de Contrato" },
 
         ],
       },
@@ -47,6 +48,12 @@ export default function NavMenu() {
           { path: "/Ver_clientes", label: "Ver clientes" },
         ],
       },
+      {
+        label: "Adeudos",
+        children: [
+          { path: "/Ver_adeudos", label: "Ver adeudos" },
+        ],
+      },
     ],
 
     caja: [
@@ -55,6 +62,8 @@ export default function NavMenu() {
       { label: "Ver pagos", path: "/Ver_pagos" },
       { path: "/Registro_AVoluntarias", label: "Registrar Aportación Voluntaria" },
       { path: "/Ver_aportaciones", label: "Ver Aportaciones Voluntarias" },
+      { path: "/Ver_adeudos", label: "Ver adeudos" },
+      { path: "/Registro_Pcontratos", label: "Registrar Pago de Contrato" },
     ],
 
     usuario: [

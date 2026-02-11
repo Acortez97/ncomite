@@ -1,0 +1,14 @@
+.anim-expand {
+  animation: expand .3s ease-out;
+}
+
+@keyframes expand {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

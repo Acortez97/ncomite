@@ -45,7 +45,7 @@ const headCells = [
   { id: "Contrato", label: "# Contrato" },
   { id: "Contratante", label: "Contratante" },
   { id: "anio_pago", label: "Año" },
-  { id: "mes_pago", label: "Mes" },
+  { id: "fecha_registro", label: "Fecha de pago" },
   { id: "monto_pago", label: "Monto" },
   { id: "metodo_pago", label: "Método" },
   { id: "observaciones", label: "Observaciones" },
@@ -105,7 +105,7 @@ export default function VerPagos() {
         body: JSON.stringify({
           select: `
             p.anio_pago,
-            p.mes_pago,
+            p.fecha_registro,
             p.monto_pago,
             p.metodo_pago,
             p.observaciones,
@@ -207,7 +207,7 @@ export default function VerPagos() {
                   <TableCell>{row.Contrato}</TableCell>
                   <TableCell>{row.Contratante}</TableCell>
                   <TableCell>{row.anio_pago}</TableCell>
-                  <TableCell>{row.mes_pago}</TableCell>
+                  <TableCell>{row.fecha_registro}</TableCell>
                   <TableCell>${row.monto_pago}</TableCell>
                   <TableCell>{row.metodo_pago}</TableCell>
                   <TableCell>{row.observaciones}</TableCell>

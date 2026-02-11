@@ -147,10 +147,70 @@ export default function RegistroAportacionVoluntaria() {
     setNumContrato("");
   };
 
+function numeroALetras(num) {
+    const unidades = [
+        "", "UNO", "DOS", "TRES", "CUATRO", "CINCO",
+        "SEIS", "SIETE", "OCHO", "NUEVE"
+    ];
+
+    const especiales = [
+        "DIEZ", "ONCE", "DOCE", "TRECE", "CATORCE", "QUINCE",
+        "DIECISÉIS", "DIECISIETE", "DIECIOCHO", "DIECINUEVE"
+    ];
+
+    const decenas = [
+        "", "DIEZ", "VEINTE", "TREINTA", "CUARENTA",
+        "CINCUENTA", "SESENTA", "SETENTA", "OCHENTA", "NOVENTA"
+    ];
+
+    const centenas = [
+        "", "CIENTO", "DOSCIENTOS", "TRESCIENTOS", "CUATROCIENTOS",
+        "QUINIENTOS", "SEISCIENTOS", "SETECIENTOS", "OCHOCIENTOS",
+        "NOVECIENTOS"
+    ];
+
+    function convertir(n) {
+        if (n === 0) return "";
+        if (n < 10) return unidades[n];
+        if (n < 20) return especiales[n - 10];
+        if (n < 100) {
+            if (n === 20) return "VEINTE";
+            if (n < 30) return "VEINTI" + unidades[n - 20];
+            return decenas[Math.floor(n / 10)] +
+                (n % 10 ? " Y " + unidades[n % 10] : "");
+        }
+        if (n < 1000) {
+            if (n === 100) return "CIEN";
+            return centenas[Math.floor(n / 100)] +
+                (n % 100 ? " " + convertir(n % 100) : "");
+        }
+        if (n < 1000000) {
+            if (n === 1000) return "MIL";
+            return convertir(Math.floor(n / 1000)) + " MIL" +
+                (n % 1000 ? " " + convertir(n % 1000) : "");
+        }
+        return convertir(Math.floor(n / 1000000)) + " MILLONES" +
+            (n % 1000000 ? " " + convertir(n % 1000000) : "");
+    }
+
+    // 🔹 Validar número y separar decimales
+    let partes = num.toString().split(".");
+    let entero = parseInt(partes[0], 10);
+    let decimales = partes[1] ? partes[1].padEnd(2, "0").slice(0, 2) : "00";
+
+    let letraEntero = convertir(entero).trim();
+    if (letraEntero === "") letraEntero = "CERO";
+
+    return `${letraEntero} PESOS ${decimales}/100 M.N.`;
+}
+
+
+
   /* =================== PDF =================== */
   const generarPDF = (info) => {
+    const montoLetras = numeroALetras(parseInt(info.montoPago)) + " PESOS MXN";
     const doc = new jsPDF();
-     const pageWidth = doc.internal.pageSize.getWidth();
+    const pageWidth = doc.internal.pageSize.getWidth();
 
     /* === ENCABEZADO === */
     let y = 20;
@@ -224,17 +284,24 @@ export default function RegistroAportacionVoluntaria() {
     });
 
     /* ===================== MONTO DESTACADO ===================== */
+
     y += 10;
     doc.setLineWidth(0.3);
-    doc.rect(25, y - 6, pageWidth - 50, 14);
+    doc.rect(25, y - 6, pageWidth - 50, 20); // ← más alto para que quepa todo
+
+    const montoNumero = `$${parseFloat(info.monto).toLocaleString("es-MX", {
+      minimumFractionDigits: 2,
+    })}`;
+
+    const montoLetra = numeroALetras(info.monto).toUpperCase();
 
     doc.setFont("helvetica", "bold");
-    doc.setFontSize(14);
+    doc.setFontSize(13);
     doc.text(
-      `MONTO PAGADO: $${info.monto}`,
+      `MONTO PAGADO: ${montoNumero} (${montoLetra} MXN)`,
       pageWidth / 2,
       y + 4,
-      { align: "center" }
+      { align: "center", maxWidth: pageWidth - 60 }
     );
 
 
