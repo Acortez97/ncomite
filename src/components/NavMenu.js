@@ -64,6 +64,7 @@ export default function NavMenu() {
       { path: "/Ver_aportaciones", label: "Ver Aportaciones Voluntarias" },
       { path: "/Ver_adeudos", label: "Ver adeudos" },
       { path: "/Registro_Pcontratos", label: "Registrar Pago de Contrato" },
+      { path: "/Registro_usuarios", label: "Registrar usuario" },
     ],
 
     usuario: [
@@ -88,6 +89,7 @@ export default function NavMenu() {
         children: [
           { path: "/Ver_pagos", label: "Ver pagos" },
           { path: "/Ver_aportaciones", label: "Ver Aportaciones Voluntarias" },
+          { path: "/Ver_adeudos", label: "Ver adeudos" },
 
         ],
       },

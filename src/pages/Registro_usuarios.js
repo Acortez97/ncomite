@@ -181,7 +181,7 @@ const Input = ({ label, value, setValue, type = 'text', required }) => (
     </div>
 );
 
-export default withAuthRole(Registro_usuarios, ['admin', 'usuario']);
+export default withAuthRole(Registro_usuarios, ['admin', 'usuario', 'caja']);
 
 /* ESTILOS */
 const containerStyle = {

@@ -58,7 +58,7 @@ function App({ Component, pageProps }) {
             {/* Rutas adicionales */}
             <Route path="/Ver_usuarios" element={<ProtectedRoute rolesAllowed={["admin", "cliente", "usuario"]}><Layout><VerUsuarios /></Layout></ProtectedRoute>} />
             <Route path="/Editar_usuarios" element={<ProtectedRoute rolesAllowed={["admin"]}><Layout><EditarUsuarios /></Layout></ProtectedRoute>} />
-            <Route path="/Registro_usuarios" element={<ProtectedRoute rolesAllowed={["admin", "usuario"]}><Layout><RegistroUsuarios /></Layout></ProtectedRoute>} />
+            <Route path="/Registro_usuarios" element={<ProtectedRoute rolesAllowed={["admin", "usuario", "caja"]}><Layout><RegistroUsuarios /></Layout></ProtectedRoute>} />
             <Route path="/Ver_contratos" element={<ProtectedRoute rolesAllowed={["admin", "usuario"]}><Layout><VerContratos /></Layout></ProtectedRoute>} />
             <Route path="/Registro_contratos" element={<ProtectedRoute rolesAllowed={["admin", "usuario"]}><Layout><RegistroContratos /></Layout></ProtectedRoute>} />
             <Route path="/Registro_pagos" element={<ProtectedRoute rolesAllowed={["admin", "caja"]}><Layout><RegistroPagos /></Layout></ProtectedRoute>} />
