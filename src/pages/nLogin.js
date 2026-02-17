@@ -114,10 +114,16 @@ export default function Login() {
               onChange={(e) => setPass(e.target.value)}
               required
             />
-
             <button disabled={loading}>
               {loading ? "Ingresando..." : "Entrar"}
             </button>
+            {tipo === "cliente" && (
+              <div style={{ textAlign: "center", marginTop: 15 }}>
+                <a href="/cambiar_pass" style={{ color: "#0077b6" }}>
+                  ¿Olvidaste tu contraseña?
+                </a>
+              </div>
+            )}
           </form>
         </div>
       </div>

@@ -98,7 +98,7 @@ export default function NavMenu() {
 
     cliente: [
       { label: "Inicio", path: "/Cliente" },
-      { label: "Mis datos", path: "/Ver_usuarios" },
+      { label: "Mis datos", path: "/cliente_datos" },
     ],
   };
 
