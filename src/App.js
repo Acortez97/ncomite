@@ -30,6 +30,7 @@ import VerAdeudos from "./pages/Ver_adeudos";
 import RegistroPagosContratos from "./pages/Registro_Pcontratos";
 import ClientePerfil from "./pages/cliente_datos";
 import ClienteForgotPassword from "./pages/cambiar_pass";
+import ClienteContacto from "./pages/contactanos";
 
 import AdminHome from "./pages/Admin";
 import CajaHome from "./pages/Caja";
@@ -79,6 +80,7 @@ function App({ Component, pageProps }) {
             <Route path="/Registro_Pcontratos" element={<ProtectedRoute rolesAllowed={["admin", "caja"]}><Layout><RegistroPagosContratos /></Layout></ProtectedRoute>} />
 
             <Route path="/cliente_datos" element={<ProtectedRoute rolesAllowed={["cliente"]}><Layout><ClientePerfil /></Layout></ProtectedRoute>} />
+            <Route path="/contactanos" element={<ProtectedRoute rolesAllowed={["cliente"]}><Layout><ClienteContacto /></Layout></ProtectedRoute>} />
 
            
 

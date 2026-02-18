@@ -99,6 +99,7 @@ export default function NavMenu() {
     cliente: [
       { label: "Inicio", path: "/Cliente" },
       { label: "Mis datos", path: "/cliente_datos" },
+      { label: "Contactanos", path: "/contactanos" },
     ],
   };
 
