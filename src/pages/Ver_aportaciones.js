@@ -142,7 +142,9 @@ export default function VerAportaciones() {
                  c.num_contrato AS Contrato`,
         table: `aportacion_voluntaria av
                 LEFT JOIN usuarios u ON av.id_usuario = u.id_usuario
-                LEFT JOIN contratos c ON av.id_contrato = c.id_contrato`,
+                LEFT JOIN contratos c ON av.id_contrato = c.id_contrato`
+        ,
+        where: "av.status = 1",
       }),
     })
       .then((res) => res.json())

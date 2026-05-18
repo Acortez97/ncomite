@@ -13,6 +13,44 @@ export default function Login() {
   const [pass, setPass] = useState("");
   const [loading, setLoading] = useState(false);
 
+  // 🔹 POPUP PROFESIONAL (POWERED BY)
+  const showInfo = () => {
+    Swal.fire({
+      title: "Comité del Agua de San Gaspar Tlahuelilpan, Metepec, Edo. Méx.",
+      html: `
+    <div style="text-align:center">
+      <h3>Solución desarrollada por</h3>
+      <h2 style="color:#0077b6;">Adrian Cortez</h2>
+
+      <p style="margin-top:10px;">
+        Desarrollo de sistemas web a la medida
+      </p>
+
+      <hr/>
+
+      <p><b>Tecnologías:</b></p>
+      <p>React • PHP • MySQL • AWS</p>
+
+      <hr/>
+
+      <p><b>Contacto</b></p>
+      <p style="margin:5px 0;">📧 adriancortezv97@gmail.com</p>
+      <p style="margin:5px 0;">📱 +52 729 542 6360</p>
+
+      <p style="font-size:12px; margin-top:10px;">
+        Soporte, mejoras o nuevos desarrollos
+      </p>
+
+      <p style="margin-top:15px; font-size:12px;">
+        © ${new Date().getFullYear()} Todos los derechos reservados
+      </p>
+    </div>
+  `,
+      confirmButtonText: "Cerrar",
+      width: 500,
+    });
+  };
+
   if (user) {
     if (user.rol === "admin") return <Navigate to="/Admin" />;
     if (user.rol === "caja") return <Navigate to="/Caja" />;
@@ -114,9 +152,11 @@ export default function Login() {
               onChange={(e) => setPass(e.target.value)}
               required
             />
+
             <button disabled={loading}>
               {loading ? "Ingresando..." : "Entrar"}
             </button>
+
             {tipo === "cliente" && (
               <div style={{ textAlign: "center", marginTop: 15 }}>
                 <a href="/cambiar_pass" style={{ color: "#0077b6" }}>
@@ -127,6 +167,32 @@ export default function Login() {
           </form>
         </div>
       </div>
+
+      {/* 🔹 FOOTER DISCRETO (NO INTERFIERE CON NADA) */}
+      <div style={styles.footer}>
+        © {new Date().getFullYear()}Comité del Agua de San Gaspar Tlahuelilpan, Metepec, Edo Méx.  |{" "}
+        <span onClick={showInfo} style={styles.link}>
+          Powered by Adrian Cortez
+        </span>
+      </div>
     </div>
   );
 }
+
+// 🔹 ESTILOS AISLADOS (NO ROMPEN TU CSS)
+const styles = {
+  footer: {
+    position: "fixed",
+    bottom: "10px",
+    width: "100%",
+    textAlign: "center",
+    fontSize: "12px",
+    color: "#ffffffcc",
+    zIndex: 10,
+  },
+  link: {
+    color: "#90e0ef",
+    cursor: "pointer",
+    fontWeight: "bold",
+  },
+};
