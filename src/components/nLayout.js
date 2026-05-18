@@ -6,7 +6,7 @@ export default function Layout({ children }) {
   return (
     <>
       <NavMenu />
-      <main style={{ padding: "20px", minHeight: "calc(100vh - 120px)" }}>
+      <main style={{ padding: "clamp(12px, 3vw, 24px)", minHeight: "calc(100vh - 120px)" }}>
         {children}
       </main>
       <Footer />

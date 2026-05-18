@@ -27,9 +27,10 @@ import { saveAs } from "file-saver";
 import SearchIcon from '@mui/icons-material/Search';
 import DownloadIcon from '@mui/icons-material/Download';
 
+import { API } from "../Api/api.config";
+
 // 🔗 API PHP REAL
-const API_SELECT_SALIDAS =
-  "https://comitedeaguasangaspartl.com/api/Selectgeneric/Select_Gen.php";
+const API_SELECT_SALIDAS = API.SELECT;
 
 // ----------------SORTING--------------------
 function descendingComparator(a, b, orderBy) {
@@ -236,19 +237,10 @@ export default function VerSalidas() {
   return (
     <Box sx={{ width: "95%", margin: "auto" }}>
       <Paper sx={{ width: "100%", mb: 2 }}>
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "center",
-            marginBottom: "20px",
-          }}
-        >
-          <label style={{ fontSize: "2.5rem", fontWeight: "bold" }}>
-            Visualizar Salidas
-          </label>
-        </div>
-
-        <EnhancedTableToolbar numSelected={selected.length} />
+        <Typography variant="h5" fontWeight={700} color="#0f4c75"
+          sx={{ px: 3, pt: 2.5, pb: 1 }}>
+          {selected.length > 0 ? `${selected.length} seleccionado(s)` : "Salidas"}
+        </Typography>
 
         {/* ===== TOOLBAR ===== */}
         <Toolbar sx={{ justifyContent: 'space-between', flexWrap: 'wrap', gap: 2 }}>
@@ -302,14 +294,16 @@ export default function VerSalidas() {
                     key={index}
                     onClick={(e) => handleClick(e, row.idsalidas)}
                     selected={isItemSelected}
-                    sx={{ cursor: "pointer" }}
+                    sx={{ cursor: "pointer", "&:hover": { backgroundColor: "#f0f7ff" } }}
                   >
                     <TableCell padding="checkbox">
                       <Checkbox color="primary" checked={isItemSelected} />
                     </TableCell>
 
-                    <TableCell>{row.descripcion}</TableCell>
-                    <TableCell>{row.monto}</TableCell>
+                    <TableCell sx={{ fontWeight: 500 }}>{row.descripcion}</TableCell>
+                    <TableCell sx={{ color: "#c0392b", fontWeight: 600 }}>
+                      ${Number(row.monto).toLocaleString("es-MX")}
+                    </TableCell>
                     <TableCell>{row.fecha}</TableCell>
                     <TableCell>{row.autoriza}</TableCell>
                     <TableCell>{row.observaciones}</TableCell>

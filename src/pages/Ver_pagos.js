@@ -1,4 +1,4 @@
-import * as React from "react";
+﻿import * as React from "react";
 import PropTypes from "prop-types";
 import { alpha } from "@mui/material/styles";
 import {
@@ -26,6 +26,7 @@ import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
 import SearchIcon from '@mui/icons-material/Search';
 import DownloadIcon from '@mui/icons-material/Download';
+import { API } from "../Api/api.config";
 
 /* ===================== ORDENAMIENTO ===================== */
 function descendingComparator(a, b, orderBy) {
@@ -98,7 +99,7 @@ export default function VerPagos() {
   /* ===================== FETCH PAGOS ===================== */
   React.useEffect(() => {
     fetch(
-      "https://comitedeaguasangaspartl.com/api/Selectgeneric/SelectWithJoin.php",
+      API.SELECT_JOIN,
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -160,9 +161,7 @@ export default function VerPagos() {
   return (
     <Box sx={{ width: "95%", margin: "auto" }}>
       <Paper sx={{ p: 2 }}>
-        <Typography variant="h4" align="center" gutterBottom>
-          Visualizar Pagos
-        </Typography>
+        <Typography variant="h5" fontWeight={700} color="#0f4c75" sx={{ px: 1, pt: 1, pb: 1 }}>Pagos Registrados</Typography>
 
         {/* ===== TOOLBAR ===== */}
         <Toolbar sx={{ justifyContent: 'space-between', flexWrap: 'wrap', gap: 2 }}>

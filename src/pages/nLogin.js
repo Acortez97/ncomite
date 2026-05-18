@@ -170,7 +170,7 @@ export default function Login() {
 
       {/* 🔹 FOOTER DISCRETO (NO INTERFIERE CON NADA) */}
       <div style={styles.footer}>
-        © {new Date().getFullYear()}Comité del Agua de San Gaspar Tlahuelilpan, Metepec, Edo Méx.  |{" "}
+        © {new Date().getFullYear()} Comité del Agua de San Gaspar Tlahuelilpan, Metepec, Edo Méx. |{" "}
         <span onClick={showInfo} style={styles.link}>
           Powered by Adrian Cortez
         </span>

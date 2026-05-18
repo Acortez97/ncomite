@@ -1,19 +1,20 @@
 import React, { useEffect, useState } from 'react';
 import Swal from 'sweetalert2';
+import { FaFileContract } from 'react-icons/fa';
+import { API } from "../Api/api.config";
 
-const API_SELECT_USUARIOS = "https://comitedeaguasangaspartl.com/api/Selectgeneric/Select_Gen.php";
-
-const API_INSERT_CONTRATO = "https://comitedeaguasangaspartl.com/api/Insertgeneric/insert.php";
+const API_SELECT_USUARIOS = API.SELECT;
+const API_INSERT_CONTRATO = API.INSERT;
 
 export default function RegistroContratos() {
-  const [usuarios, setUsuarios] = useState([]);
+  const [usuarios,           setUsuarios]           = useState([]);
   const [usuarioSeleccionado, setUsuarioSeleccionado] = useState('');
-  const [busquedaUsuario, setBusquedaUsuario] = useState('');
-  const [numContrato, setNumContrato] = useState('');
-  const [fechaContrato, setFechaContrato] = useState('');
-  const [responComite, setResponComite] = useState('');
+  const [busquedaUsuario,    setBusquedaUsuario]    = useState('');
+  const [numContrato,        setNumContrato]        = useState('');
+  const [fechaContrato,      setFechaContrato]      = useState('');
+  const [responComite,       setResponComite]       = useState('');
+  const [loading,            setLoading]            = useState(false);
 
-  /* ===================== CARGAR USUARIOS ===================== */
   useEffect(() => {
     fetch(API_SELECT_USUARIOS, {
       method: 'POST',
@@ -24,40 +25,25 @@ export default function RegistroContratos() {
       }),
     })
       .then(res => res.json())
-      .then(data => {
-        if (!data.error) setUsuarios(data);
-      })
-      .catch(err => {
-        console.error(err);
-        Swal.fire('Error', 'No se pudieron cargar los usuarios', 'error');
-      });
+      .then(data => { if (!data.error) setUsuarios(data.filter(u => !u.Contratante?.startsWith("TEST_PRUEBA"))); })
+      .catch(() => Swal.fire('Error', 'No se pudieron cargar los usuarios', 'error'));
   }, []);
 
-  /* ===================== FECHA LOCAL ===================== */
   const getFechaLocal = () => {
     const now = new Date();
     const pad = (n) => n.toString().padStart(2, '0');
-
     return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())} `
       + `${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
   };
 
-  /* ===================== LIMPIAR FORM ===================== */
   const limpiar = () => {
-    setUsuarioSeleccionado('');
-    setBusquedaUsuario('');
-    setNumContrato('');
-    setFechaContrato('');
-    setResponComite('');
+    setUsuarioSeleccionado(''); setBusquedaUsuario('');
+    setNumContrato(''); setFechaContrato(''); setResponComite('');
   };
 
-  /* ===================== GUARDAR ===================== */
   const guardarContrato = async () => {
-    if (!usuarioSeleccionado) {
-      Swal.fire('Error', 'El contratante es obligatorio', 'error');
-      return;
-    }
-
+    if (!usuarioSeleccionado) { Swal.fire('Error', 'El contratante es obligatorio', 'error'); return; }
+    setLoading(true);
     try {
       const res = await fetch(API_INSERT_CONTRATO, {
         method: 'POST',
@@ -74,147 +60,97 @@ export default function RegistroContratos() {
           },
         }),
       });
-
       const result = await res.json();
       if (!res.ok) throw new Error(result?.error);
-
       Swal.fire('Éxito', 'Contrato registrado correctamente', 'success');
       limpiar();
-    } catch (err) {
-      console.error(err);
+    } catch {
       Swal.fire('Error', 'No se pudo guardar el contrato', 'error');
+    } finally {
+      setLoading(false);
     }
   };
 
-  /* ===================== RENDER ===================== */
+  const usuariosFiltrados = usuarios.filter(u =>
+    u.Contratante.toLowerCase().includes(busquedaUsuario.toLowerCase())
+  );
+
   return (
-    <div style={containerStyle}>
-      <h2 style={{ textAlign: 'center', marginBottom: 30 }}>
-        Registro de Contratos
-      </h2>
+    <div className="form-page">
+      <div className="form-card">
+        <h2 className="form-title">Registro de Contratos</h2>
 
-      <form
-        onSubmit={(e) => {
-          e.preventDefault();
-          guardarContrato();
-        }}
-        style={formStyle}
-      >
-        {/* BUSCAR USUARIO */}
-        <div>
-          <label><b>Buscar usuario</b></label>
-          <input
-            type="text"
-            value={busquedaUsuario}
-            onChange={e => setBusquedaUsuario(e.target.value)}
-            placeholder="Nombre del contratante"
-            style={inputStyle}
-          />
-        </div>
+        <form onSubmit={(e) => { e.preventDefault(); guardarContrato(); }}>
 
-        {/* SELECT USUARIO */}
-        <div>
-          <label><b>Contratante</b></label>
-          <select
-            required
-            value={usuarioSeleccionado}
-            onChange={e => setUsuarioSeleccionado(e.target.value)}
-            style={inputStyle}
-          >
-            <option value="">SELECCIONE</option>
-            {usuarios
-              .filter(u =>
-                u.Contratante
-                  .toLowerCase()
-                  .includes(busquedaUsuario.toLowerCase())
-              )
-              .map(u => (
-                <option key={u.id_usuario} value={u.id_usuario}>
-                  {u.Contratante}
-                </option>
+          <div className="form-group">
+            <label className="form-label">Buscar contratante</label>
+            <input
+              type="text"
+              value={busquedaUsuario}
+              onChange={e => setBusquedaUsuario(e.target.value)}
+              placeholder="Escribe el nombre..."
+              className="form-input"
+            />
+          </div>
+
+          <div className="form-group">
+            <label className="form-label">Contratante *</label>
+            <select
+              required
+              value={usuarioSeleccionado}
+              onChange={e => setUsuarioSeleccionado(e.target.value)}
+              className="form-input"
+            >
+              <option value="">— Seleccione —</option>
+              {usuariosFiltrados.map(u => (
+                <option key={u.id_usuario} value={u.id_usuario}>{u.Contratante}</option>
               ))}
-          </select>
-        </div>
+            </select>
+          </div>
 
-        {/* NUM CONTRATO */}
-        <div>
-          <label><b>Número de contrato</b></label>
-          <input
-            type="text"
-            value={numContrato}
-            onChange={e => setNumContrato(e.target.value)}
-            style={inputStyle}
-          />
-        </div>
+          <div className="form-group">
+            <label className="form-label">Número de contrato</label>
+            <input
+              type="text"
+              value={numContrato}
+              onChange={e => setNumContrato(e.target.value)}
+              className="form-input"
+            />
+          </div>
 
-        {/* FECHA */}
-        <div>
-          <label><b>Fecha del contrato</b></label>
-          <input
-            type="datetime-local"
-            value={fechaContrato}
-            onChange={e => setFechaContrato(e.target.value)}
-            style={inputStyle}
-          />
-        </div>
+          <div className="form-group">
+            <label className="form-label">Fecha del contrato</label>
+            <input
+              type="datetime-local"
+              value={fechaContrato}
+              onChange={e => setFechaContrato(e.target.value)}
+              className="form-input"
+            />
+          </div>
 
-        {/* RESPONSABLE */}
-        <div>
-          <label><b>Responsable del comité</b></label>
-          <select
-            required
-            value={responComite}
-            onChange={e => setResponComite(e.target.value)}
-            style={inputStyle}
-          >
-            <option value="">SELECCIONE</option>
-            <option value="Presidente">Presidente</option>
-            <option value="Secretario">Secretario</option>
-            <option value="Tesorero">Tesorero</option>
-            <option value="Auxiliar">Auxiliar</option>
-            <option value="Voluntario">Voluntario</option>
-          </select>
-        </div>
+          <div className="form-group">
+            <label className="form-label">Responsable del comité *</label>
+            <select
+              required
+              value={responComite}
+              onChange={e => setResponComite(e.target.value)}
+              className="form-input"
+            >
+              <option value="">— Seleccione —</option>
+              <option value="Presidente">Presidente</option>
+              <option value="Secretario">Secretario</option>
+              <option value="Tesorero">Tesorero</option>
+              <option value="Auxiliar">Auxiliar</option>
+              <option value="Voluntario">Voluntario</option>
+            </select>
+          </div>
 
-        <button type="submit" style={buttonStyle}>
-          Registrar Contrato
-        </button>
-      </form>
+          <button type="submit" className="btn-primary" disabled={loading}
+            style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+            <FaFileContract /> {loading ? 'Guardando...' : 'Registrar Contrato'}
+          </button>
+        </form>
+      </div>
     </div>
   );
 }
-
-/* ===================== ESTILOS ===================== */
-
-const containerStyle = {
-  maxWidth: 600,
-  margin: '40px auto',
-  padding: 20,
-  background: '#f9f9f9',
-  borderRadius: 10,
-  boxShadow: '0 4px 10px rgba(0,0,0,.1)',
-};
-
-const formStyle = {
-  display: 'flex',
-  flexDirection: 'column',
-  gap: 18,
-};
-
-const inputStyle = {
-  width: '100%',
-  padding: 10,
-  marginTop: 5,
-  borderRadius: 6,
-  border: '1px solid #ccc',
-};
-
-const buttonStyle = {
-  marginTop: 10,
-  padding: 12,
-  background: '#0077b6',
-  color: '#fff',
-  border: 'none',
-  borderRadius: 6,
-  cursor: 'pointer',
-};

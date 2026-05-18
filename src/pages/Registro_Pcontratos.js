@@ -2,13 +2,12 @@ import React, { useEffect, useState } from "react";
 import Swal from "sweetalert2";
 import { jsPDF } from "jspdf";
 
+import { API } from "../Api/api.config";
+
 /* ======= ENDPOINTS ======= */
-const API_SELECT =
-  "https://comitedeaguasangaspartl.com/api/Selectgeneric/Select_Gen.php";
-const API_SELECT_WHERE =
-  "https://comitedeaguasangaspartl.com/api/Selectgeneric/SelectWithWhere.php";
-const API_INSERT =
-  "https://comitedeaguasangaspartl.com/api/Insertgeneric/insert.php";
+const API_SELECT       = API.SELECT;
+const API_SELECT_WHERE = API.SELECT_WHERE;
+const API_INSERT       = API.INSERT;
 
 /* ============================================================
         VISTA PRINCIPAL: Registro de Pagos de Contratos
@@ -406,22 +405,20 @@ export default function RegistroPagosContratos() {
                           RENDER
      ============================================================ */
   return (
-    <div style={styles.container}>
-      <h2 style={{ textAlign: "center", marginBottom: 20 }}>
-        Registro de Pagos de Contratos
-      </h2>
+    <div className="form-page"><div className="form-card">
+      <h2 className="form-title">Registro de Pagos de Contratos</h2>
 
       {/* ===== Selección de Modo ===== */}
-      <div style={styles.selectorModo}>
+      <div style={{ display: "flex", gap: 12, marginBottom: 24, flexWrap: "wrap" }}>
         <button
-          style={modo === "nuevo" ? styles.btnSelected : styles.btn}
+          className={modo === "nuevo" ? "btn-primary" : "btn-secondary"} style={{ flex: 1, minWidth: 120 }}
           onClick={() => setModo("nuevo")}
         >
           ➕ Nuevo Contrato
         </button>
 
         <button
-          style={modo === "reposicion" ? styles.btnSelected : styles.btn}
+          className={modo === "reposicion" ? "btn-primary" : "btn-secondary"} style={{ flex: 1, minWidth: 120 }}
           onClick={() => setModo("reposicion")}
         >
           🔄 Reposición
@@ -438,19 +435,19 @@ export default function RegistroPagosContratos() {
                       FORMULARIO: NUEVO CONTRATO
          ============================================================ */}
       {modo === "nuevo" && (
-        <div style={styles.form}>
+        <div>
           <h3>Registrar Nuevo Contrato</h3>
 
           {/* BUSCAR USUARIO */}
           <input
-            style={styles.input}
+            className="form-input"
             placeholder="Buscar usuario..."
             value={busqueda}
             onChange={(e) => setBusqueda(e.target.value)}
           />
 
           <select
-            style={styles.input}
+            className="form-input"
             value={userSelect}
             onChange={(e) => setUserSelect(e.target.value)}
           >
@@ -467,7 +464,7 @@ export default function RegistroPagosContratos() {
           </select>
 
           <input
-            style={styles.input}
+            className="form-input"
             placeholder="Número de contrato nuevo"
             value={contratoNuevo}
             onChange={(e) => setContratoNuevo(e.target.value)}
@@ -475,14 +472,14 @@ export default function RegistroPagosContratos() {
 
           <input
             type="number"
-            style={styles.input}
+            className="form-input"
             placeholder="Monto"
             value={monto}
             onChange={(e) => setMonto(e.target.value)}
           />
 
           <select
-            style={styles.input}
+            className="form-input"
             value={metodoPago}
             onChange={(e) => setMetodoPago(e.target.value)}
           >
@@ -493,13 +490,13 @@ export default function RegistroPagosContratos() {
           </select>
 
           <textarea
-            style={styles.textarea}
+            className="form-input"
             placeholder="Observaciones"
             value={observaciones}
             onChange={(e) => setObservaciones(e.target.value)}
           />
 
-          <button style={styles.btnGuardar} onClick={guardarPago}>
+          <button className="btn-primary" onClick={guardarPago} style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
             Registrar Pago y Contrato
           </button>
         </div>
@@ -509,19 +506,19 @@ export default function RegistroPagosContratos() {
                       FORMULARIO: REPOSICIÓN
          ============================================================ */}
       {modo === "reposicion" && (
-        <div style={styles.form}>
+        <div>
           <h3>Registrar Reposición de Contrato</h3>
 
           {/* BUSCAR USUARIO */}
           <input
-            style={styles.input}
+            className="form-input"
             placeholder="Buscar usuario..."
             value={busqueda}
             onChange={(e) => setBusqueda(e.target.value)}
           />
 
           <select
-            style={styles.input}
+            className="form-input"
             value={userSelect}
             onChange={(e) => {
               setUserSelect(e.target.value);
@@ -541,7 +538,7 @@ export default function RegistroPagosContratos() {
           </select>
 
           <select
-            style={styles.input}
+            className="form-input"
             value={contratoSeleccionado}
             onChange={(e) => setContratoSeleccionado(e.target.value)}
           >
@@ -555,14 +552,14 @@ export default function RegistroPagosContratos() {
 
           <input
             type="number"
-            style={styles.input}
+            className="form-input"
             placeholder="Monto"
             value={monto}
             onChange={(e) => setMonto(e.target.value)}
           />
 
           <select
-            style={styles.input}
+            className="form-input"
             value={metodoPago}
             onChange={(e) => setMetodoPago(e.target.value)}
           >
@@ -573,92 +570,22 @@ export default function RegistroPagosContratos() {
           </select>
 
           <textarea
-            style={styles.textarea}
+            className="form-input"
             placeholder="Observaciones"
             value={observaciones}
             onChange={(e) => setObservaciones(e.target.value)}
           />
 
-          <button style={styles.btnGuardar} onClick={guardarPago}>
+          <button className="btn-primary" onClick={guardarPago} style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
             Registrar Pago
           </button>
         </div>
       )}
-    </div>
+    </div></div>
   );
 }
 
 /* ============================================================
                         ESTILOS
    ============================================================ */
-const styles = {
-  container: {
-    maxWidth: 650,
-    margin: "40px auto",
-    padding: 20,
-    background: "#f8f9fa",
-    borderRadius: 8,
-    boxShadow: "0 3px 10px rgba(0,0,0,0.1)",
-  },
 
-  selectorModo: {
-    display: "flex",
-    justifyContent: "space-around",
-    marginBottom: 25,
-  },
-
-  btn: {
-    padding: "10px 20px",
-    background: "#bbb",
-    border: "none",
-    borderRadius: 6,
-    cursor: "pointer",
-  },
-
-  btnSelected: {
-    padding: "10px 20px",
-    background: "#0077b6",
-    color: "white",
-    border: "none",
-    borderRadius: 6,
-    fontWeight: "bold",
-    cursor: "pointer",
-  },
-
-  form: {
-    background: "white",
-    padding: 20,
-    borderRadius: 8,
-    marginTop: 15,
-    boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
-  },
-
-  input: {
-    width: "100%",
-    padding: 10,
-    marginTop: 10,
-    border: "1px solid #bbb",
-    borderRadius: 6,
-  },
-
-  textarea: {
-    width: "100%",
-    padding: 10,
-    marginTop: 10,
-    height: 80,
-    border: "1px solid #bbb",
-    borderRadius: 6,
-  },
-
-  btnGuardar: {
-    width: "100%",
-    marginTop: 20,
-    padding: 12,
-    background: "#28a745",
-    color: "white",
-    border: "none",
-    fontSize: "1rem",
-    borderRadius: 6,
-    cursor: "pointer",
-  },
-};

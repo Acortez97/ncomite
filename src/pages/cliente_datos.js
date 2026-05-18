@@ -1,26 +1,21 @@
 import React, { useEffect, useState, useContext } from "react";
 import { AuthContext } from "../context/authContext";
 import Swal from "sweetalert2";
+import {
+  FaUser, FaPhone, FaEnvelope, FaMapMarkerAlt, FaFileContract, FaIdCard,
+} from "react-icons/fa";
 
-/* ===================== APIs ===================== */
+import { API } from "../Api/api.config";
 
-const API_SELECT_USUARIO =
-  "https://comitedeaguasangaspartl.com/api/Selectgeneric/SelectWithWhere.php";
-
-const API_SELECT_CONTRATOS =
-  "https://comitedeaguasangaspartl.com/api/Selectgeneric/SelectWithWhere.php";
-
-/* ================================================= */
+const API_SELECT_USUARIO   = API.SELECT_WHERE;
+const API_SELECT_CONTRATOS = API.SELECT_WHERE;
 
 export default function ClientePerfil() {
   const { user } = useContext(AuthContext);
 
   const [infoUsuario, setInfoUsuario] = useState(null);
   const [contratos, setContratos] = useState([]);
-
   const [loading, setLoading] = useState(true);
-
-  /* ===================== CARGAR INFO USUARIO ===================== */
 
   useEffect(() => {
     if (!user?.id_usuario) return;
@@ -29,26 +24,19 @@ export default function ClientePerfil() {
       try {
         setLoading(true);
 
-        // 1️⃣ Datos del usuario
         const resUsuario = await fetch(API_SELECT_USUARIO, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            select:
-              "id_usuario, Nombre, Apellido_pat, Apellido_mat, domicilio, num_celular, correo",
+            select: "id_usuario, Nombre, Apellido_pat, Apellido_mat, domicilio, num_celular, correo",
             table: "usuarios",
             column: "id_usuario",
             id: user.id_usuario,
           }),
         });
-
         const dataUsuario = await resUsuario.json();
+        if (!dataUsuario.error && dataUsuario.length > 0) setInfoUsuario(dataUsuario[0]);
 
-        if (!dataUsuario.error && dataUsuario.length > 0) {
-          setInfoUsuario(dataUsuario[0]);
-        }
-
-        // 2️⃣ Contratos del usuario
         const resContratos = await fetch(API_SELECT_CONTRATOS, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -59,14 +47,9 @@ export default function ClientePerfil() {
             id: user.id_usuario,
           }),
         });
-
         const dataContratos = await resContratos.json();
-
-        if (!dataContratos.error) {
-          setContratos(dataContratos);
-        }
-      } catch (error) {
-        console.error(error);
+        if (!dataContratos.error) setContratos(dataContratos);
+      } catch {
         Swal.fire("Error", "No se pudo cargar la información", "error");
       } finally {
         setLoading(false);
@@ -76,99 +59,192 @@ export default function ClientePerfil() {
     cargarDatos();
   }, [user]);
 
-  /* ===================== VALIDACIÓN ===================== */
-
   if (!user) {
-    return (
-      <div style={containerStyle}>
-        <h2>Debes iniciar sesión</h2>
-      </div>
-    );
+    return <div style={pageStyle}><p style={muted}>Debes iniciar sesión.</p></div>;
   }
 
-  /* ===================== RENDER ===================== */
+  if (loading) {
+    return <div style={pageStyle}><p style={muted}>Cargando información...</p></div>;
+  }
 
   return (
-    <div style={containerStyle}>
-      <h1 style={{ marginBottom: 25 }}>👤 Mi Información</h1>
-
-      {loading && <p>Cargando información...</p>}
-
-      {!loading && infoUsuario && (
-        <div style={cardStyle}>
-          <ul style={listStyle}>
-            <li>
-              <strong>Nombre completo:</strong>{" "}
-              {infoUsuario.Nombre} {infoUsuario.Apellido_pat}{" "}
-              {infoUsuario.Apellido_mat}
-            </li>
-
-            <li>
-              <strong>Dirección:</strong>{" "}
-              {infoUsuario.domicilio || "No registrada"}
-            </li>
-
-            <li>
-              <strong>Teléfono:</strong>{" "}
-              {infoUsuario.num_celular || "No registrado"}
-            </li>
-
-            <li>
-              <strong>Correo:</strong>{" "}
-              {infoUsuario.correo || "No registrado"}
-            </li>
-          </ul>
+    <div style={pageStyle}>
+      {/* Header */}
+      <div style={headerCard}>
+        <div style={avatarCircle}>
+          <FaUser style={{ fontSize: 28, color: "white" }} />
         </div>
+        <div>
+          <h1 style={headerName}>
+            {infoUsuario
+              ? `${infoUsuario.Nombre} ${infoUsuario.Apellido_pat} ${infoUsuario.Apellido_mat || ""}`.trim()
+              : user.Nombre}
+          </h1>
+          <p style={{ margin: 0, color: "rgba(255,255,255,0.8)", fontSize: 13 }}>
+            Perfil de cliente
+          </p>
+        </div>
+      </div>
+
+      {/* Info personal */}
+      {infoUsuario && (
+        <section style={section}>
+          <h2 style={sectionTitle}>
+            <FaIdCard style={{ marginRight: 8, verticalAlign: "middle" }} />
+            Información Personal
+          </h2>
+          <div style={infoGrid}>
+            <InfoRow icon={<FaUser />}          label="Nombre completo"
+              value={`${infoUsuario.Nombre} ${infoUsuario.Apellido_pat} ${infoUsuario.Apellido_mat || ""}`.trim()} />
+            <InfoRow icon={<FaMapMarkerAlt />}  label="Dirección"
+              value={infoUsuario.domicilio || "No registrada"} />
+            <InfoRow icon={<FaPhone />}         label="Teléfono"
+              value={infoUsuario.num_celular || "No registrado"} />
+            <InfoRow icon={<FaEnvelope />}      label="Correo electrónico"
+              value={infoUsuario.correo || "No registrado"} />
+          </div>
+        </section>
       )}
 
-      {/* ===================== CONTRATOS ===================== */}
+      {/* Contratos */}
+      <section style={section}>
+        <h2 style={sectionTitle}>
+          <FaFileContract style={{ marginRight: 8, verticalAlign: "middle" }} />
+          Mis Contratos
+        </h2>
 
-      <div style={{ marginTop: 30 }}>
-        <h2>📄 Mis Contratos</h2>
-
-        {loading && <p>Cargando contratos...</p>}
-
-        {!loading && contratos.length === 0 && (
-          <p style={{ color: "#777" }}>
-            No tienes contratos registrados.
-          </p>
-        )}
-
-        {!loading && contratos.length > 0 && (
-          <div style={cardStyle}>
-            <ul style={listStyle}>
-              {contratos.map((c) => (
-                <li key={c.id_contrato}>
-                  Contrato: <strong>{c.num_contrato}</strong>
-                </li>
-              ))}
-            </ul>
+        {contratos.length === 0 ? (
+          <p style={muted}>No tienes contratos registrados.</p>
+        ) : (
+          <div style={contratoGrid}>
+            {contratos.map((c) => (
+              <div key={c.id_contrato} style={contratoChip}>
+                <FaFileContract style={{ color: "#0f4c75", marginRight: 6 }} />
+                <span style={{ fontWeight: 600, color: "#0f4c75" }}>
+                  {c.num_contrato || `#${c.id_contrato}`}
+                </span>
+              </div>
+            ))}
           </div>
         )}
+      </section>
+    </div>
+  );
+}
+
+function InfoRow({ icon, label, value }) {
+  return (
+    <div style={infoRow}>
+      <div style={infoIcon}>{icon}</div>
+      <div>
+        <div style={infoLabel}>{label}</div>
+        <div style={infoValue}>{value}</div>
       </div>
     </div>
   );
 }
 
-/* ===================== ESTILOS ===================== */
-
-const containerStyle = {
-  maxWidth: 800,
-  margin: "40px auto",
-  padding: 25,
-  background: "#f4f6f9",
-  borderRadius: 10,
+/* ── Styles ── */
+const pageStyle = {
+  maxWidth: 720,
+  margin: "32px auto",
+  padding: "0 clamp(12px, 4vw, 20px)",
 };
 
-const cardStyle = {
+const headerCard = {
+  background: "linear-gradient(135deg, #0f4c75 0%, #1a6090 100%)",
+  borderRadius: 14,
+  padding: "clamp(20px, 5vw, 28px) clamp(20px, 5vw, 32px)",
+  marginBottom: 24,
+  display: "flex",
+  alignItems: "center",
+  gap: 20,
+  boxShadow: "0 4px 18px rgba(15,76,117,0.25)",
+  flexWrap: "wrap",
+};
+
+const avatarCircle = {
+  width: 64,
+  height: 64,
+  borderRadius: "50%",
+  background: "rgba(255,255,255,0.2)",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  flexShrink: 0,
+};
+
+const headerName = {
+  margin: 0,
+  color: "white",
+  fontSize: "clamp(17px, 4vw, 22px)",
+  fontWeight: 700,
+};
+
+const section = {
   background: "white",
-  padding: 20,
-  borderRadius: 10,
-  boxShadow: "0 3px 12px rgba(0,0,0,0.1)",
+  borderRadius: 12,
+  padding: "clamp(16px, 4vw, 24px)",
+  marginBottom: 20,
+  boxShadow: "0 2px 12px rgba(0,0,0,0.08)",
 };
 
-const listStyle = {
-  listStyle: "none",
-  padding: 0,
-  lineHeight: "2rem",
+const sectionTitle = {
+  fontSize: "clamp(14px, 3vw, 17px)",
+  fontWeight: 700,
+  color: "#0f4c75",
+  margin: "0 0 16px 0",
+  paddingBottom: 12,
+  borderBottom: "2px solid #e8eef4",
 };
+
+const infoGrid = {
+  display: "flex",
+  flexDirection: "column",
+  gap: 14,
+};
+
+const infoRow = {
+  display: "flex",
+  alignItems: "flex-start",
+  gap: 12,
+};
+
+const infoIcon = {
+  color: "#0f4c75",
+  fontSize: 16,
+  marginTop: 3,
+  flexShrink: 0,
+};
+
+const infoLabel = {
+  fontSize: 11,
+  fontWeight: 700,
+  color: "#888",
+  textTransform: "uppercase",
+  letterSpacing: "0.5px",
+  marginBottom: 2,
+};
+
+const infoValue = {
+  fontSize: 15,
+  color: "#222",
+};
+
+const contratoGrid = {
+  display: "flex",
+  flexWrap: "wrap",
+  gap: 10,
+};
+
+const contratoChip = {
+  display: "flex",
+  alignItems: "center",
+  background: "#eaf3fb",
+  border: "1.5px solid #bee3f8",
+  borderRadius: 8,
+  padding: "8px 16px",
+  fontSize: 14,
+};
+
+const muted = { color: "#999", fontSize: 14 };

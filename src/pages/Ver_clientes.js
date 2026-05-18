@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from "react";
 import Swal from "sweetalert2";
 
-const API_LOGIN_JOIN = "https://comitedeaguasangaspartl.com/api/Selectgeneric/clientes_login_join.php";
-const API_INSERT = "https://comitedeaguasangaspartl.com/api/Insertgeneric/insert.php";
+import { API } from "../Api/api.config";
+
+const API_LOGIN_JOIN = API.SELECT_CLIENTES_LOGIN;
+const API_INSERT     = API.INSERT;
 
 export default function CrearAccesosLogin() {
     const [data, setData] = useState([]); // Datos originales
@@ -18,8 +20,9 @@ export default function CrearAccesosLogin() {
         fetch(API_LOGIN_JOIN)
             .then((res) => res.json())
             .then((resData) => {
-                setData(resData);
-                setFilteredData(resData);
+                const sinPrueba = resData.filter(u => u.nombre !== "TEST_PRUEBA");
+                setData(sinPrueba);
+                setFilteredData(sinPrueba);
             })
             .catch(() => Swal.fire("Error", "No se pudieron cargar los datos", "error"));
     };

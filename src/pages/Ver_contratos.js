@@ -25,9 +25,10 @@ import { saveAs } from 'file-saver';
 import SearchIcon from '@mui/icons-material/Search';
 import DownloadIcon from '@mui/icons-material/Download';
 
+import { API } from "../Api/api.config";
+
 /* ================== CONFIG ================== */
-const API_SELECT =
-  'https://comitedeaguasangaspartl.com/api/Selectgeneric/SelectWithJoin.php';
+const API_SELECT = API.SELECT_JOIN;
 
 /* ================== SORT HELPERS ================== */
 function descendingComparator(a, b, orderBy) {
@@ -58,7 +59,6 @@ function EnhancedTableHead({ order, orderBy, onRequestSort }) {
   return (
     <TableHead>
       <TableRow sx={{ backgroundColor: '#0f4c75' }}>
-        <TableCell />
         {headCells.map((headCell) => (
           <TableCell key={headCell.id} sx={{ color: 'white' }}>
             <TableSortLabel
@@ -161,11 +161,10 @@ export default function VerContratos() {
   return (
     <Box sx={{ width: '95%', margin: 'auto' }}>
       <Paper sx={{ mb: 2 }}>
-        <Typography variant="h4" align="center" sx={{ my: 2 }}>
-          Visualizar Contratos
+        <Typography variant="h5" fontWeight={700} color="#0f4c75"
+          sx={{ px: 3, pt: 2.5, pb: 1 }}>
+          Contratos
         </Typography>
-
-        <EnhancedTableToolbar />
 
         <Toolbar sx={{ justifyContent: 'space-between', flexWrap: 'wrap', gap: 2 }}>
           <TextField
@@ -206,9 +205,8 @@ export default function VerContratos() {
             />
             <TableBody>
               {visibleRows.map((row, i) => (
-                <TableRow key={i}>
-                  <TableCell />
-                  <TableCell>{row.Contratante}</TableCell>
+                <TableRow key={i} hover sx={{ "&:hover": { backgroundColor: "#f0f7ff" } }}>
+                  <TableCell sx={{ fontWeight: 500 }}>{row.Contratante}</TableCell>
                   <TableCell>{row.num_contrato}</TableCell>
                   <TableCell>
                     {row.Fecha_contrato &&

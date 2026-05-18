@@ -121,14 +121,7 @@
     justify-content: center;
   }
 }
-/* FOOTER */
-.footer {
-  background: #003366; /* mismo color */
-  color: white;
-  text-align: center;
-  padding: 15px 0;
-  margin-top: auto;
-}
+/* FOOTER — estilos en globals.css */
 
 /* para que sea responsive */
 @media (max-width: 600px) {
@@ -285,14 +278,22 @@
 @media (max-width: 900px) {
   .login-content {
     flex-direction: column;
-    gap: 25px;
+    gap: 20px;
   }
 
   .login-image {
-    max-width: 100%;
+    width: 120px;
+    max-width: 120px;
   }
 
   .login-card {
     max-width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .login-image {
+    width: 80px;
+    max-width: 80px;
   }
 }

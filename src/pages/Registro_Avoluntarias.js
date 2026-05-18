@@ -3,15 +3,11 @@ import Swal from "sweetalert2";
 import { jsPDF } from "jspdf";
 import { AuthContext } from "../context/authContext";
 
-// ENDPOINTS PHP
-const API_SELECT_USUARIOS =
-  "https://comitedeaguasangaspartl.com/api/Selectgeneric/Select_Gen.php";
+import { API } from "../Api/api.config";
 
-const API_SELECT_CONTRATOS =
-  "https://comitedeaguasangaspartl.com/api/Selectgeneric/SelectWithWhere.php";
-
-const API_INSERT_APORTACION =
-  "https://comitedeaguasangaspartl.com/api/Insertgeneric/insert.php";
+const API_SELECT_USUARIOS   = API.SELECT;
+const API_SELECT_CONTRATOS  = API.SELECT_WHERE;
+const API_INSERT_APORTACION = API.INSERT;
 
 export default function RegistroAportacionVoluntaria() {
   const { user } = useContext(AuthContext);
@@ -59,7 +55,7 @@ export default function RegistroAportacionVoluntaria() {
       }),
     })
       .then((res) => res.json())
-      .then((data) => !data.error && setUsuarios(data))
+      .then((data) => !data.error && setUsuarios(data.filter(u => u.Contratante && !u.Contratante.startsWith("TEST_PRUEBA"))))
       .catch(() => Swal.fire("Error", "No se pudieron cargar usuarios", "error"));
   }, []);
 
@@ -341,139 +337,91 @@ export default function RegistroAportacionVoluntaria() {
 
   /* =================== RENDER =================== */
   return (
-    <div style={formContainerStyle}>
-      <h2 style={{ textAlign: "center" }}>Aportación Voluntaria</h2>
+    <div className="form-page">
+      <div className="form-card">
+        <h2 className="form-title">Aportación Voluntaria</h2>
 
-      <form
-        onSubmit={(e) => {
-          e.preventDefault();
-          guardarAportacion();
-        }}
-        style={formStyle}
-      >
-        <input
-          placeholder="Buscar usuario"
-          value={busquedaUsuario}
-          onChange={(e) => setBusquedaUsuario(e.target.value)}
-          style={inputStyle}
-        />
+        <form onSubmit={(e) => { e.preventDefault(); guardarAportacion(); }}>
+          <div className="form-group">
+            <label className="form-label">Buscar usuario</label>
+            <input
+              type="text"
+              placeholder="Escribe el nombre..."
+              value={busquedaUsuario}
+              onChange={(e) => setBusquedaUsuario(e.target.value)}
+              className="form-input"
+            />
+          </div>
 
-        <select
-          required
-          value={usuarioSeleccionado}
-          onChange={(e) => setUsuarioSeleccionado(e.target.value)}
-          style={inputStyle}
-        >
-          <option value="">SELECCIONE USUARIO</option>
-          {usuarios
-            .filter((u) =>
-              u.Contratante.toLowerCase().includes(
-                busquedaUsuario.toLowerCase()
-              )
-            )
-            .map((u) => (
-              <option key={u.id_usuario} value={u.id_usuario}>
-                {u.Contratante}
-              </option>
-            ))}
-        </select>
+          <div className="form-group">
+            <label className="form-label">Usuario *</label>
+            <select required value={usuarioSeleccionado}
+              onChange={(e) => setUsuarioSeleccionado(e.target.value)}
+              className="form-input">
+              <option value="">— Seleccione usuario —</option>
+              {usuarios
+                .filter((u) => u.Contratante.toLowerCase().includes(busquedaUsuario.toLowerCase()))
+                .map((u) => (
+                  <option key={u.id_usuario} value={u.id_usuario}>{u.Contratante}</option>
+                ))}
+            </select>
+          </div>
 
-        <select
-          required
-          value={contratoSeleccionado}
-          onChange={(e) => {
-            setContratoSeleccionado(e.target.value);
-            const c = contratos.find(
-              (x) => x.id_contrato == e.target.value
-            );
-            setNumContrato(c?.num_contrato || "");
-          }}
-          style={inputStyle}
-        >
-          <option value="">SELECCIONE CONTRATO</option>
-          {contratos.map((c) => (
-            <option key={c.id_contrato} value={c.id_contrato}>
-              {c.num_contrato}
-            </option>
-          ))}
-        </select>
+          <div className="form-group">
+            <label className="form-label">Contrato *</label>
+            <select required value={contratoSeleccionado}
+              onChange={(e) => {
+                setContratoSeleccionado(e.target.value);
+                const c = contratos.find((x) => x.id_contrato == e.target.value);
+                setNumContrato(c?.num_contrato || "");
+              }}
+              className="form-input">
+              <option value="">— Seleccione contrato —</option>
+              {contratos.map((c) => (
+                <option key={c.id_contrato} value={c.id_contrato}>{c.num_contrato}</option>
+              ))}
+            </select>
+          </div>
 
-        <input
-          type="datetime-local"
-          value={fechaAportacion}
-          onChange={(e) => setFechaAportacion(e.target.value)}
-          style={inputStyle}
-          required
-        />
+          <div className="form-group">
+            <label className="form-label">Fecha de aportación *</label>
+            <input type="datetime-local" required value={fechaAportacion}
+              onChange={(e) => setFechaAportacion(e.target.value)}
+              className="form-input" />
+          </div>
 
-        <input
-          type="number"
-          placeholder="Monto"
-          value={monto}
-          onChange={(e) => setMonto(e.target.value)}
-          style={inputStyle}
-          required
-        />
+          <div className="form-group">
+            <label className="form-label">Monto *</label>
+            <input type="number" required placeholder="Monto" value={monto}
+              onChange={(e) => setMonto(e.target.value)}
+              className="form-input" />
+          </div>
 
-        <select
-          required
-          value={metodo}
-          onChange={(e) => setMetodo(e.target.value)}
-          style={inputStyle}
-        >
-          <option value="">Método de pago</option>
-          {["EFECTIVO", "TRANSFERENCIA", "TARJETA"].map((m) => (
-            <option key={m} value={m}>
-              {m}
-            </option>
-          ))}
-        </select>
+          <div className="form-group">
+            <label className="form-label">Método de pago *</label>
+            <select required value={metodo}
+              onChange={(e) => setMetodo(e.target.value)}
+              className="form-input">
+              <option value="">— Seleccione —</option>
+              {["EFECTIVO", "TRANSFERENCIA", "TARJETA"].map((m) => (
+                <option key={m} value={m}>{m}</option>
+              ))}
+            </select>
+          </div>
 
-        <input
-          placeholder="Observaciones"
-          value={observaciones}
-          onChange={(e) => setObservaciones(e.target.value)}
-          style={inputStyle}
-        />
+          <div className="form-group">
+            <label className="form-label">Observaciones</label>
+            <input type="text" placeholder="Observaciones" value={observaciones}
+              onChange={(e) => setObservaciones(e.target.value)}
+              className="form-input" />
+          </div>
 
-        <button type="submit" style={buttonStyle}>
-          Guardar Aportación
-        </button>
-      </form>
+          <button type="submit" className="btn-primary"
+            style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
+            Guardar Aportación
+          </button>
+        </form>
+      </div>
     </div>
   );
 }
-
-/* =================== ESTILOS =================== */
-const formContainerStyle = {
-  maxWidth: 600,
-  margin: "40px auto",
-  padding: 20,
-  background: "#f9f9f9",
-  borderRadius: 10,
-  boxShadow: "0 4px 8px rgba(0,0,0,0.1)",
-};
-
-const formStyle = {
-  display: "flex",
-  flexDirection: "column",
-  gap: 20,
-};
-
-const inputStyle = {
-  width: "100%",
-  padding: 10,
-  fontSize: "0.95rem",
-  border: "1px solid #ccc",
-  borderRadius: 6,
-};
-
-const buttonStyle = {
-  padding: "10px 20px",
-  backgroundColor: "#0077b6",
-  color: "#fff",
-  border: "none",
-  borderRadius: 6,
-  cursor: "pointer",
-  marginTop: 10,
-};

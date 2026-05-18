@@ -12,12 +12,13 @@ import { visuallyHidden } from '@mui/utils';
 
 import Swal from 'sweetalert2';
 import withReactContent from 'sweetalert2-react-content';
+import { API } from "../Api/api.config";
 
 const MySwal = withReactContent(Swal);
 
 /* API URLs */
-const API_SELECT = "https://comitedeaguasangaspartl.com/api/Selectgeneric/Select_Gen.php";
-const API_UPDATE = "https://comitedeaguasangaspartl.com/api/Updategeneric/update_generic.php";
+const API_SELECT = API.SELECT;
+const API_UPDATE = API.UPDATE;
 
 /* Table Head Configuration */
 const headCells = [
@@ -206,7 +207,7 @@ export default function Ver_usuarios() {
             body: JSON.stringify({ select: '*', table: 'usuarios' }),
         })
             .then(res => res.json())
-            .then(data => setRows(data))
+            .then(data => setRows(data.filter(u => u.Nombre !== "TEST_PRUEBA")))
             .catch(err => console.error('Error al obtener usuarios:', err));
     }, []);
 

@@ -1,29 +1,18 @@
-import React, { useEffect, useState, useContext } from "react";
+﻿import React, { useEffect, useState, useContext } from "react";
 import Swal from "sweetalert2";
 import { jsPDF } from "jspdf";
 import { AuthContext } from "../context/authContext";
 
+import { API } from "../Api/api.config";
+
 // ===================== API ENDPOINTS =====================
-const API_SELECT_USUARIOS =
-    "https://comitedeaguasangaspartl.com/api/Selectgeneric/Select_Gen.php";
-
-const API_SELECT_CONTRATOS =
-    "https://comitedeaguasangaspartl.com/api/Selectgeneric/SelectWithWhere.php";
-
-const API_INSERT_PAGO =
-    "https://comitedeaguasangaspartl.com/api/Insertgeneric/insert.php";
-
-const API_ADEUDOS_GENERAR =
-    "https://comitedeaguasangaspartl.com/api/Insertgeneric/generar_adeudos.php";
-
-const API_ADEUDOS_GET =
-    "https://comitedeaguasangaspartl.com/api/Selectgeneric/get_adeudos.php";
-
-const API_UPDATE_ADEUDO =
-    "https://comitedeaguasangaspartl.com/api/Updategeneric/update_generic.php";
-
-const API_INSERT_ADEUDO =
-    "https://comitedeaguasangaspartl.com/api/Insertgeneric/insert.php";
+const API_SELECT_USUARIOS  = API.SELECT;
+const API_SELECT_CONTRATOS = API.SELECT_WHERE;
+const API_INSERT_PAGO      = API.INSERT;
+const API_ADEUDOS_GENERAR  = API.GENERAR_ADEUDOS;
+const API_ADEUDOS_GET      = API.GET_ADEUDOS;
+const API_UPDATE_ADEUDO    = API.UPDATE;
+const API_INSERT_ADEUDO    = API.INSERT;
 
 export default function RegistroPagos() {
     const { user } = useContext(AuthContext);

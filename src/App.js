@@ -1,6 +1,6 @@
 // src/App.js
 import React from 'react';
-//import '../styles/globals.css'
+import './styles/globals.css';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/authContext';
 import Layout from './components/nLayout';
@@ -31,6 +31,12 @@ import RegistroPagosContratos from "./pages/Registro_Pcontratos";
 import ClientePerfil from "./pages/cliente_datos";
 import ClienteForgotPassword from "./pages/cambiar_pass";
 import ClienteContacto from "./pages/contactanos";
+import ReporteFlujoCaja from "./pages/Reporte_FlujoCaja";
+import ReporteAdeudos from "./pages/Reporte_Adeudos";
+import ReporteActividad from "./pages/Reporte_Actividad";
+import ClienteEstadoCuenta from "./pages/Cliente_EstadoCuenta";
+import ClienteHistorialPagos from "./pages/Cliente_HistorialPagos";
+import ClienteHistorialAportaciones from "./pages/Cliente_HistorialAportaciones";
 
 import AdminHome from "./pages/Admin";
 import CajaHome from "./pages/Caja";
@@ -82,7 +88,17 @@ function App({ Component, pageProps }) {
             <Route path="/cliente_datos" element={<ProtectedRoute rolesAllowed={["cliente"]}><Layout><ClientePerfil /></Layout></ProtectedRoute>} />
             <Route path="/contactanos" element={<ProtectedRoute rolesAllowed={["cliente"]}><Layout><ClienteContacto /></Layout></ProtectedRoute>} />
 
-           
+            {/* ── Reportes Admin ── */}
+            <Route path="/Reporte_FlujoCaja"  element={<ProtectedRoute rolesAllowed={["admin"]}><Layout><ReporteFlujoCaja /></Layout></ProtectedRoute>} />
+            <Route path="/Reporte_Adeudos"    element={<ProtectedRoute rolesAllowed={["admin"]}><Layout><ReporteAdeudos /></Layout></ProtectedRoute>} />
+            <Route path="/Reporte_Actividad"  element={<ProtectedRoute rolesAllowed={["admin"]}><Layout><ReporteActividad /></Layout></ProtectedRoute>} />
+
+            {/* ── Reportes Cliente ── */}
+            <Route path="/Cliente_EstadoCuenta"       element={<ProtectedRoute rolesAllowed={["cliente"]}><Layout><ClienteEstadoCuenta /></Layout></ProtectedRoute>} />
+            <Route path="/Cliente_HistorialPagos"     element={<ProtectedRoute rolesAllowed={["cliente"]}><Layout><ClienteHistorialPagos /></Layout></ProtectedRoute>} />
+            <Route path="/Cliente_HistorialAportaciones" element={<ProtectedRoute rolesAllowed={["cliente"]}><Layout><ClienteHistorialAportaciones /></Layout></ProtectedRoute>} />
+
+
 
           </Routes>
 

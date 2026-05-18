@@ -27,9 +27,10 @@ import { saveAs } from "file-saver";
 import SearchIcon from '@mui/icons-material/Search';
 import DownloadIcon from '@mui/icons-material/Download';
 
+import { API } from "../Api/api.config";
+
 // -------------------- APIs PHP --------------------
-const API_SELECT_JOIN =
-  "https://comitedeaguasangaspartl.com/api/Selectgeneric/SelectWithJoin.php";
+const API_SELECT_JOIN = API.SELECT_JOIN;
 
 // -------------------- Ordenamiento --------------------
 function descendingComparator(a, b, orderBy) {
@@ -213,9 +214,8 @@ export default function VerAportaciones() {
   return (
     <Box sx={{ width: "95%", margin: "auto" }}>
       <Paper sx={{ width: "100%", mb: 2 }}>
-        <div style={{ textAlign: "center", padding: "20px" }}>
-          <h1>Visualizar Aportaciones Voluntarias</h1>
-        </div>
+        <Typography variant="h5" fontWeight={700} color="#0f4c75" sx={{ px: 3, pt: 2.5, pb: 1 }}>Aportaciones Voluntarias</Typography>
+        
 
         <EnhancedTableToolbar numSelected={selected.length} />
 

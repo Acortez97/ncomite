@@ -1,9 +1,9 @@
 import React, { useState, useContext } from "react";
 import Swal from "sweetalert2";
 import { AuthContext } from "../context/authContext";
+import { API } from "../Api/api.config";
 
-const API_CONTACTO =
-    "https://comitedeaguasangaspartl.com/api/send_mail.php";
+const API_CONTACTO = API.SEND_MAIL;
 
 export default function ClienteContacto() {
     const { user } = useContext(AuthContext);

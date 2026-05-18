@@ -13,7 +13,9 @@ import DownloadIcon from '@mui/icons-material/Download';
 import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
 
-const API_URL = "https://comitedeaguasangaspartl.com/api/Selectgeneric/Select_Gen.php";
+import { API } from "../Api/api.config";
+
+const API_URL = API.SELECT;
 
 /* ===================== TABLE HEAD ===================== */
 
@@ -108,7 +110,7 @@ export default function VerUsuarios() {
     })
       .then(res => res.json())
       .then(data => {
-        if (!data.error) setRows(data);
+        if (!data.error) setRows(data.filter(u => u.Nombre !== "TEST_PRUEBA"));
       });
   }, []);
 
@@ -142,9 +144,10 @@ export default function VerUsuarios() {
 
   return (
     <Box sx={{ width: '95%', mx: 'auto' }}>
-      <Paper sx={{ p: 2, mb: 2 }}>
-        <Typography variant="h4" align="center" gutterBottom>
-          Visualizar Usuarios
+      <Paper sx={{ mb: 2 }}>
+        <Typography variant="h5" fontWeight={700} color="#0f4c75"
+          sx={{ px: 3, pt: 2.5, pb: 1 }}>
+          Usuarios
         </Typography>
 
         {/* ===== TOOLBAR ===== */}
@@ -183,7 +186,8 @@ export default function VerUsuarios() {
             />
             <TableBody>
               {visibleRows.map(row => (
-                <TableRow key={row.id_usuario} hover>
+                <TableRow key={row.id_usuario} hover
+                  sx={{ "&:hover": { backgroundColor: "#f0f7ff" } }}>
                   <TableCell>{row.Nombre}</TableCell>
                   <TableCell>{row.Apellido_pat}</TableCell>
                   <TableCell>{row.Apellido_mat}</TableCell>
