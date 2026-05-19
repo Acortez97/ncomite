@@ -4,6 +4,7 @@ import Papa from 'papaparse';
 import withAuthRole from '../components/withAuthRole';
 import { FaUpload, FaUserPlus } from 'react-icons/fa';
 import { API } from "../Api/api.config";
+import { apiFetch } from "../Api/apiFetch";
 
 const API_INSERT     = API.INSERT;
 const API_IMPORT_CSV = API.IMPORT_CSV;
@@ -33,7 +34,7 @@ function Registro_usuarios() {
     const guardarUsuario = async () => {
         setLoading(true);
         try {
-            const response = await fetch(API_INSERT, {
+            const response = await apiFetch(API_INSERT, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -79,7 +80,7 @@ function Registro_usuarios() {
                     const fecha = getFechaLocal();
                     const usuarios = data.map(u => ({ ...u, status: 1, fecha_creacion: fecha }));
                     try {
-                        const res = await fetch(API_IMPORT_CSV, {
+                        const res = await apiFetch(API_IMPORT_CSV, {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify({ usuarios }),

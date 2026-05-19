@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import Swal from "sweetalert2";
 
 import { API } from "../Api/api.config";
+import { apiFetch } from "../Api/apiFetch";
 
 const API_LOGIN_JOIN = API.SELECT_CLIENTES_LOGIN;
 const API_INSERT     = API.INSERT;
@@ -17,7 +18,7 @@ export default function CrearAccesosLogin() {
     const [itemsPerPage] = useState(20); // Cambia aquí cuántos ver por página
 
     const cargarDatos = () => {
-        fetch(API_LOGIN_JOIN)
+        apiFetch(API_LOGIN_JOIN)
             .then((res) => res.json())
             .then((resData) => {
                 const sinPrueba = resData.filter(u => u.nombre !== "TEST_PRUEBA");
@@ -54,7 +55,7 @@ export default function CrearAccesosLogin() {
         const passMD5 = "d1ba957ebc4998838e4a880aef3183d3"; // MD5 de Temporal123
 
         try {
-            const res = await fetch(API_INSERT, {
+            const res = await apiFetch(API_INSERT, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({

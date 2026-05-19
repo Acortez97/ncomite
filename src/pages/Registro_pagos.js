@@ -1,9 +1,10 @@
-﻿import React, { useEffect, useState, useContext } from "react";
+import React, { useEffect, useState, useContext } from "react";
 import Swal from "sweetalert2";
 import { jsPDF } from "jspdf";
 import { AuthContext } from "../context/authContext";
 
 import { API } from "../Api/api.config";
+import { apiFetch } from "../Api/apiFetch";
 
 // ===================== API ENDPOINTS =====================
 const API_SELECT_USUARIOS  = API.SELECT;
@@ -50,7 +51,7 @@ export default function RegistroPagos() {
 
         console.log(`⚠ Generando adeudo faltante del año ${anioActual}`);
 
-        await fetch(API_INSERT_ADEUDO, {
+        await apiFetch(API_INSERT_ADEUDO, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
@@ -68,7 +69,7 @@ export default function RegistroPagos() {
 
     // ===================== CARGAR USUARIOS =====================
     useEffect(() => {
-        fetch(API_SELECT_USUARIOS, {
+        apiFetch(API_SELECT_USUARIOS, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
@@ -88,7 +89,7 @@ export default function RegistroPagos() {
     useEffect(() => {
         if (!usuarioSeleccionado) return;
 
-        fetch(API_SELECT_CONTRATOS, {
+        apiFetch(API_SELECT_CONTRATOS, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
@@ -115,7 +116,7 @@ export default function RegistroPagos() {
         if (!contrato?.Fecha_contrato) return;
 
         // 1️⃣ Generar adeudos históricos según fecha del contrato (PHP)
-        fetch(API_ADEUDOS_GENERAR, {
+        apiFetch(API_ADEUDOS_GENERAR, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
@@ -125,7 +126,7 @@ export default function RegistroPagos() {
             }),
         }).then(() => {
             // 2️⃣ Cargar adeudos
-            fetch(API_ADEUDOS_GET, {
+            apiFetch(API_ADEUDOS_GET, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
@@ -142,7 +143,7 @@ export default function RegistroPagos() {
                     await generarAdeudoActual(usuarioSeleccionado, contratoSeleccionado, existentes);
 
                     // 4️⃣ Recargar con el adeudo actualizado
-                    fetch(API_ADEUDOS_GET, {
+                    apiFetch(API_ADEUDOS_GET, {
                         method: "POST",
                         headers: { "Content-Type": "application/json" },
                         body: JSON.stringify({
@@ -197,7 +198,7 @@ export default function RegistroPagos() {
             },
         };
 
-        const resPago = await fetch(API_INSERT_PAGO, {
+        const resPago = await apiFetch(API_INSERT_PAGO, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(payloadPago),
@@ -214,7 +215,7 @@ export default function RegistroPagos() {
         const adeudo = adeudos.find((a) => a.anio == anioPago);
 
         if (adeudo) {
-            await fetch(API_UPDATE_ADEUDO, {
+            await apiFetch(API_UPDATE_ADEUDO, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({

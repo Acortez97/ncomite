@@ -4,6 +4,7 @@ import { AuthContext } from "../context/authContext";
 import { FaFileContract, FaCheckCircle, FaExclamationCircle, FaInbox } from "react-icons/fa";
 
 import { API } from "../Api/api.config";
+import { apiFetch } from "../Api/apiFetch";
 
 const API_SELECT_CONTRATOS = API.SELECT_WHERE;
 const API_ADEUDOS_GET      = API.GET_ADEUDOS;
@@ -19,7 +20,7 @@ export default function ClienteHome() {
   useEffect(() => {
     if (!user?.id_usuario) return;
     setLoadingContratos(true);
-    fetch(API_SELECT_CONTRATOS, {
+    apiFetch(API_SELECT_CONTRATOS, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -46,7 +47,7 @@ export default function ClienteHome() {
       try {
         let todos = [];
         for (const contrato of contratos) {
-          const res = await fetch(API_ADEUDOS_GET, {
+          const res = await apiFetch(API_ADEUDOS_GET, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ id_usuario: user.id_usuario, id_contrato: contrato.id_contrato }),

@@ -1,73 +1,79 @@
 <?php
 header("Content-Type: application/json; charset=UTF-8");
-
 require_once "../db.php";
+require_once "../auth_check.php";
+verificarToken($conn);
 
 $input = json_decode(file_get_contents("php://input"), true);
 
 if (!$input) {
-    echo json_encode([
-        "error" => "No se recibió JSON válido",
-        "recibido" => $input
-    ]);
+    http_response_code(400);
+    echo json_encode(["error" => "No se recibió JSON válido"]);
     exit;
 }
 
 $idusers = $input["idusers"] ?? null;
-$data   = $input["data"] ?? null;
+$data    = $input["data"]    ?? null;
 
 if (!$idusers) {
-    echo json_encode([
-        "error" => "Falta el parámetro idusers",
-        "recibido" => $input
-    ]);
+    http_response_code(400);
+    echo json_encode(["error" => "Falta el parámetro idusers"]);
     exit;
 }
 
 if (!$data || !is_array($data)) {
-    echo json_encode([
-        "error" => "Falta el parámetro data",
-        "recibido" => $input
-    ]);
+    http_response_code(400);
+    echo json_encode(["error" => "Falta el parámetro data"]);
     exit;
 }
 
-// Construir SET dinámico
+// Columnas permitidas para actualizar
+$colsPermitidas = ['nombre', 'apellido', 'usuario', 'pass', 'id_rol', 'permisos', 'status'];
+
 $setParts = [];
-$values = [];
+$values   = [];
 
 foreach ($data as $col => $val) {
+    if (!in_array($col, $colsPermitidas, true)) continue;
+
+    if ($col === 'pass') {
+        $val = password_hash($val, PASSWORD_BCRYPT);
+    }
+
+    if ($col === 'permisos') {
+        // Convertir array a JSON; null limpia los permisos
+        $val = is_array($val) ? json_encode($val) : null;
+    }
+
     $setParts[] = "`$col` = ?";
-    $values[] = $val;
+    $values[]   = $val;
 }
 
-$setQuery = implode(", ", $setParts);
+if (empty($setParts)) {
+    http_response_code(400);
+    echo json_encode(["error" => "No hay campos válidos para actualizar"]);
+    exit;
+}
+
 $values[] = $idusers;
+$sql = "UPDATE user_admin SET " . implode(", ", $setParts) . " WHERE idusers = ?";
 
-$sql = "UPDATE user_admin SET $setQuery WHERE idusers = ?";
-
-$stmt = $mysqli->prepare($sql);
+$stmt = $conn->prepare($sql);
 
 if (!$stmt) {
-    echo json_encode([
-        "error" => "Error en prepare()",
-        "detalle" => $mysqli->error,
-        "sql" => $sql
-    ]);
+    http_response_code(500);
+    echo json_encode(["error" => "Error al preparar la consulta", "detalle" => $conn->error]);
     exit;
 }
 
 $stmt->bind_param(str_repeat("s", count($values)), ...$values);
 
 if (!$stmt->execute()) {
-    echo json_encode([
-        "error" => "Error al ejecutar UPDATE",
-        "detalle" => $stmt->error
-    ]);
+    http_response_code(500);
+    echo json_encode(["error" => "Error al ejecutar UPDATE", "detalle" => $stmt->error]);
     exit;
 }
 
-echo json_encode([
-    "success" => true,
-    "message" => "Usuario actualizado correctamente"
-]);
+echo json_encode(["success" => true, "message" => "Usuario actualizado correctamente"]);
+$stmt->close();
+$conn->close();

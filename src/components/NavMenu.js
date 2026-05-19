@@ -165,9 +165,29 @@ export default function NavMenu() {
   const isActive      = (path)     => location.pathname === path;
   const isGroupActive = (children) => children?.some(c => location.pathname === c.path);
 
+  // Rutas siempre visibles sin importar permisos
+  const RUTAS_EXENTAS = ["/Admin", "/Caja", "/Usuario", "/Cliente", "/Registro_users", "/Ver_useradmin"];
+
+  const puedeVer = (path) => {
+    if (RUTAS_EXENTAS.includes(path)) return true;
+    if (!user?.permisos || !Array.isArray(user.permisos)) return true;
+    return user.permisos.includes(path);
+  };
+
+  const filtrarMenu = (items = []) =>
+    items
+      .map(item => {
+        if (item.children) {
+          const hijos = item.children.filter(c => puedeVer(c.path));
+          return hijos.length > 0 ? { ...item, children: hijos } : null;
+        }
+        return puedeVer(item.path) ? item : null;
+      })
+      .filter(Boolean);
+
   // ── Ítem de menú (reutilizable en desktop y mobile) ──
   const renderItems = (isMobileLayout) =>
-    menu[user?.rol]?.map((item, index) =>
+    filtrarMenu(menu[user?.rol]).map((item, index) =>
       item.children ? (
         <div key={index} style={isMobileLayout ? n.mobileGroup : n.dropdown}>
           <button

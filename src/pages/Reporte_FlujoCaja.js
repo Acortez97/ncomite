@@ -9,6 +9,7 @@ import {
   FaArrowUp, FaArrowDown, FaBalanceScale, FaFileExcel, FaChartBar,
 } from "react-icons/fa";
 import { API } from "../Api/api.config";
+import { apiFetch } from "../Api/apiFetch";
 
 const MESES = ["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Sep","Oct","Nov","Dic"];
 const MESES_FULL = ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
@@ -26,7 +27,7 @@ export default function ReporteFlujoCaja() {
   const fetchData = async (y) => {
     setLoading(true);
     try {
-      const res = await fetch(API.DASHBOARD, {
+      const res = await apiFetch(API.DASHBOARD, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ year: y }),

@@ -3,6 +3,7 @@ import React, { useState, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import { AuthContext } from "../context/authContext";
 import Swal from "sweetalert2";
+import { apiFetch } from "../Api/apiFetch";
 
 export default function Login() {
   const navigate = useNavigate(); // reemplazo de useRouter
@@ -17,7 +18,7 @@ export default function Login() {
     setLoading(true);
 
     try {
-      const res = await fetch("/api/login.php", { // apunta a tu PHP
+      const res = await apiFetch("/api/login.php", { // apunta a tu PHP
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ usuario, pass }),

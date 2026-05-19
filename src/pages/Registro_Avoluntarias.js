@@ -4,6 +4,7 @@ import { jsPDF } from "jspdf";
 import { AuthContext } from "../context/authContext";
 
 import { API } from "../Api/api.config";
+import { apiFetch } from "../Api/apiFetch";
 
 const API_SELECT_USUARIOS   = API.SELECT;
 const API_SELECT_CONTRATOS  = API.SELECT_WHERE;
@@ -44,7 +45,7 @@ export default function RegistroAportacionVoluntaria() {
 
   /* =================== CARGAR USUARIOS =================== */
   useEffect(() => {
-    fetch(API_SELECT_USUARIOS, {
+    apiFetch(API_SELECT_USUARIOS, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -66,7 +67,7 @@ export default function RegistroAportacionVoluntaria() {
 
     setLastUsuarioConsultado(usuarioSeleccionado);
 
-    fetch(API_SELECT_CONTRATOS, {
+    apiFetch(API_SELECT_CONTRATOS, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -101,7 +102,7 @@ export default function RegistroAportacionVoluntaria() {
       },
     };
 
-    const res = await fetch(API_INSERT_APORTACION, {
+    const res = await apiFetch(API_INSERT_APORTACION, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),

@@ -3,6 +3,8 @@ header("Content-Type: application/json");
 header("Access-Control-Allow-Origin: *");
 
 require_once "../db.php";
+require_once "../auth_check.php";
+verificarToken($conn);
 
 $input = json_decode(file_get_contents("php://input"), true);
 

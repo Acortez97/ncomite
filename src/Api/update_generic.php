@@ -1,6 +1,8 @@
 <?php
 header("Content-Type: application/json");
-require "../db.php"; // ajusta la ruta si es necesario
+require "../db.php";
+require "../security.php";
+require "../auth_check.php";
 
 // SOLO POST
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
@@ -8,6 +10,8 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     echo json_encode(["error" => "Método no permitido"]);
     exit;
 }
+
+verificarToken($conn);
 
 // Leer JSON
 $input = json_decode(file_get_contents("php://input"), true);
@@ -33,6 +37,12 @@ if (!$table || !$updates || !$idField || $idValue === null) {
 if (!is_array($updates) || count($updates) === 0) {
     http_response_code(400);
     echo json_encode(["error" => "El objeto updates está vacío"]);
+    exit;
+}
+
+if (!validarTabla($table)) {
+    http_response_code(403);
+    echo json_encode(["error" => "Acceso no permitido"]);
     exit;
 }
 

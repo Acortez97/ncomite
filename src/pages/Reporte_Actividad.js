@@ -6,6 +6,7 @@ import {
   FaFileContract, FaFileExcel, FaSearch, FaClock,
 } from "react-icons/fa";
 import { API } from "../Api/api.config";
+import { apiFetch } from "../Api/apiFetch";
 
 const fmt = (n) => `$${Number(n).toLocaleString("es-MX", { minimumFractionDigits: 2 })}`;
 
@@ -25,7 +26,7 @@ export default function ReporteActividad() {
   const [filtroTipo,   setFiltroTipo]   = useState("todos");
 
   const load = (select, table, orderBy) =>
-    fetch(API.SELECT, {
+    apiFetch(API.SELECT, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ select, table, orderBy }),
@@ -33,7 +34,7 @@ export default function ReporteActividad() {
 
   useEffect(() => {
     Promise.all([
-      fetch(API.SELECT_JOIN, {
+      apiFetch(API.SELECT_JOIN, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -48,7 +49,7 @@ export default function ReporteActividad() {
 
       load("idsalidas, descripcion AS nombre, monto, fecha, autoriza AS metodo", "salidas", "fecha DESC"),
 
-      fetch(API.SELECT_JOIN, {
+      apiFetch(API.SELECT_JOIN, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

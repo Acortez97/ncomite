@@ -3,6 +3,7 @@ import { useNavigate, Navigate } from "react-router-dom";
 import { AuthContext } from "../context/authContext";
 import Swal from "sweetalert2";
 import "../App.css";
+import { apiFetch } from "../Api/apiFetch";
 
 export default function Login() {
   const navigate = useNavigate();
@@ -68,7 +69,7 @@ export default function Login() {
         : "/api/login_cliente.php";
 
     try {
-      const res = await fetch(endpoint, {
+      const res = await apiFetch(endpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ usuario, pass }),

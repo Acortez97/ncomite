@@ -26,6 +26,7 @@ import SearchIcon from '@mui/icons-material/Search';
 import DownloadIcon from '@mui/icons-material/Download';
 
 import { API } from "../Api/api.config";
+import { apiFetch } from "../Api/apiFetch";
 
 /* ================== CONFIG ================== */
 const API_SELECT = API.SELECT_JOIN;
@@ -112,7 +113,7 @@ export default function VerContratos() {
 
   /* ================== FETCH DATA ================== */
   useEffect(() => {
-    fetch(API_SELECT, {
+    apiFetch(API_SELECT, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({

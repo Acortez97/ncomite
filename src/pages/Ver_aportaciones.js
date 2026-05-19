@@ -28,6 +28,7 @@ import SearchIcon from '@mui/icons-material/Search';
 import DownloadIcon from '@mui/icons-material/Download';
 
 import { API } from "../Api/api.config";
+import { apiFetch } from "../Api/apiFetch";
 
 // -------------------- APIs PHP --------------------
 const API_SELECT_JOIN = API.SELECT_JOIN;
@@ -134,7 +135,7 @@ export default function VerAportaciones() {
 
   // ----- Cargar datos de aportaciones -----
   useEffect(() => {
-    fetch(API_SELECT_JOIN, {
+    apiFetch(API_SELECT_JOIN, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({

@@ -23,6 +23,7 @@ export const API = {
   // AUTH
   LOGIN_ADMIN:          "/api/login_admin.php",
   LOGIN_CLIENTE:        "/api/login_cliente.php",
+  LOGOUT:               "/api/logout.php",
   FORGOT_PASSWORD:      "/api/forgot_password.php",
   RESET_PASSWORD:       "/api/reset_password.php",
 

@@ -7,6 +7,7 @@ import jsPDF from "jspdf";
 import "jspdf-autotable";
 import { AuthContext } from "../context/authContext";
 import { FaMoneyBillWave, FaArrowDown, FaWallet, FaFileExcel, FaFilePdf, FaFilter, FaCashRegister } from "react-icons/fa";
+import { apiFetch } from "../Api/apiFetch";
 
 export default function AdminHome() {
   const { user } = useContext(AuthContext);
@@ -30,7 +31,7 @@ export default function AdminHome() {
   for (let y = 2018; y <= currentYear; y++) years.push(y);
 
   const fetchDashboard = async (params = {}) => {
-    const response = await fetch("/api/dashboard/GeneralDashboard.php", {
+    const response = await apiFetch("/api/dashboard/GeneralDashboard.php", {
       method: "POST",
       body: JSON.stringify(params)
     });

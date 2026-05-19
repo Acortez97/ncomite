@@ -1,6 +1,8 @@
 <?php
 header("Content-Type: application/json");
 require "../db.php";
+require "../security.php";
+require "../auth_check.php";
 
 // 🔒 SOLO POST
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
@@ -8,6 +10,8 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     echo json_encode(["error" => "Método no permitido"]);
     exit;
 }
+
+verificarToken($conn);
 
 // Leer body JSON
 $input = json_decode(file_get_contents("php://input"), true);
@@ -32,9 +36,9 @@ if (!preg_match('/^[a-zA-Z0-9_,\s\*\.\(\)`]+$/', $select)) {
 }
 
 // 🔐 Validar TABLE (sin JOIN para este endpoint)
-if (!preg_match('/^[a-zA-Z0-9_]+$/', $table)) {
-    http_response_code(400);
-    echo json_encode(["error" => "TABLE inválida"]);
+if (!preg_match('/^[a-zA-Z0-9_]+$/', $table) || !validarTabla($table)) {
+    http_response_code(403);
+    echo json_encode(["error" => "Acceso no permitido"]);
     exit;
 }
 

@@ -28,6 +28,7 @@ import SearchIcon from '@mui/icons-material/Search';
 import DownloadIcon from '@mui/icons-material/Download';
 
 import { API } from "../Api/api.config";
+import { apiFetch } from "../Api/apiFetch";
 
 // 🔗 API PHP REAL
 const API_SELECT_SALIDAS = API.SELECT;
@@ -156,7 +157,7 @@ export default function VerSalidas() {
 
   // --------LOAD DATA FROM PHP API----------
   React.useEffect(() => {
-    fetch(API_SELECT_SALIDAS, {
+    apiFetch(API_SELECT_SALIDAS, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({

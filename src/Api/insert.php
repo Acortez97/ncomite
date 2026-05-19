@@ -1,6 +1,8 @@
 <?php
 header('Content-Type: application/json');
 require_once __DIR__ . '/../db.php';
+require_once __DIR__ . '/../security.php';
+require_once __DIR__ . '/../auth_check.php';
 
 /* SOLO POST */
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
@@ -11,6 +13,8 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     ]);
     exit;
 }
+
+verificarToken($conn);
 
 /* LEER JSON */
 $input = json_decode(file_get_contents("php://input"), true);
@@ -28,11 +32,11 @@ if (!$table || !$data || !is_array($data)) {
 }
 
 /* VALIDAR NOMBRE DE TABLA */
-if (!preg_match('/^[a-zA-Z0-9_]+$/', $table)) {
-    http_response_code(400);
+if (!preg_match('/^[a-zA-Z0-9_]+$/', $table) || !validarTabla($table)) {
+    http_response_code(403);
     echo json_encode([
         "error" => true,
-        "message" => "Invalid table name"
+        "message" => "Acceso no permitido"
     ]);
     exit;
 }

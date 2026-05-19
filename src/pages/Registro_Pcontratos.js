@@ -3,6 +3,7 @@ import Swal from "sweetalert2";
 import { jsPDF } from "jspdf";
 
 import { API } from "../Api/api.config";
+import { apiFetch } from "../Api/apiFetch";
 
 /* ======= ENDPOINTS ======= */
 const API_SELECT       = API.SELECT;
@@ -32,7 +33,7 @@ export default function RegistroPagosContratos() {
 
   /* =================== CARGAR USUARIOS =================== */
   const cargarUsuarios = () => {
-    fetch(API_SELECT, {
+    apiFetch(API_SELECT, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -50,7 +51,7 @@ export default function RegistroPagosContratos() {
   const cargarContratosUsuario = (id_usuario) => {
     if (!id_usuario) return setContratos([]);
 
-    fetch(API_SELECT_WHERE, {
+    apiFetch(API_SELECT_WHERE, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -99,7 +100,7 @@ export default function RegistroPagosContratos() {
       }
 
       // 1. Insertar contrato
-      const resContrato = await fetch(API_INSERT, {
+      const resContrato = await apiFetch(API_INSERT, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -119,7 +120,7 @@ export default function RegistroPagosContratos() {
       if (rContrato.error) return Swal.fire("Error", "No se pudo crear contrato");
 
       // 2. Insertar pago
-      await fetch(API_INSERT, {
+      await apiFetch(API_INSERT, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -152,7 +153,7 @@ export default function RegistroPagosContratos() {
 
     /* === REPOSICIÓN === */
     if (modo === "reposicion") {
-      await fetch(API_INSERT, {
+      await apiFetch(API_INSERT, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

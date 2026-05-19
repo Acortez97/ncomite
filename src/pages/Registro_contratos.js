@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import Swal from 'sweetalert2';
 import { FaFileContract } from 'react-icons/fa';
 import { API } from "../Api/api.config";
+import { apiFetch } from "../Api/apiFetch";
 
 const API_SELECT_USUARIOS = API.SELECT;
 const API_INSERT_CONTRATO = API.INSERT;
@@ -16,7 +17,7 @@ export default function RegistroContratos() {
   const [loading,            setLoading]            = useState(false);
 
   useEffect(() => {
-    fetch(API_SELECT_USUARIOS, {
+    apiFetch(API_SELECT_USUARIOS, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -45,7 +46,7 @@ export default function RegistroContratos() {
     if (!usuarioSeleccionado) { Swal.fire('Error', 'El contratante es obligatorio', 'error'); return; }
     setLoading(true);
     try {
-      const res = await fetch(API_INSERT_CONTRATO, {
+      const res = await apiFetch(API_INSERT_CONTRATO, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

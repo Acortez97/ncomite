@@ -1,4 +1,4 @@
-﻿import * as React from "react";
+import * as React from "react";
 import PropTypes from "prop-types";
 import { alpha } from "@mui/material/styles";
 import {
@@ -27,6 +27,7 @@ import { saveAs } from "file-saver";
 import SearchIcon from '@mui/icons-material/Search';
 import DownloadIcon from '@mui/icons-material/Download';
 import { API } from "../Api/api.config";
+import { apiFetch } from "../Api/apiFetch";
 
 /* ===================== ORDENAMIENTO ===================== */
 function descendingComparator(a, b, orderBy) {
@@ -98,7 +99,7 @@ export default function VerPagos() {
 
   /* ===================== FETCH PAGOS ===================== */
   React.useEffect(() => {
-    fetch(
+    apiFetch(
       API.SELECT_JOIN,
       {
         method: "POST",

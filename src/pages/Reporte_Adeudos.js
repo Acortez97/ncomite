@@ -8,6 +8,7 @@ import {
   FaExclamationTriangle, FaCheckCircle, FaUserSlash, FaFileExcel, FaSearch,
 } from "react-icons/fa";
 import { API } from "../Api/api.config";
+import { apiFetch } from "../Api/apiFetch";
 
 const fmt  = (n) => `$${Number(n).toLocaleString("es-MX", { minimumFractionDigits: 2 })}`;
 const COLORS = ["#e74c3c","#e67e22","#f1c40f","#2ecc71","#3498db","#9b59b6"];
@@ -21,7 +22,7 @@ export default function ReporteAdeudos() {
   const [tab,       setTab]       = useState("deudores"); // deudores | corriente | sinContrato
 
   const load = (select, table) =>
-    fetch(API.SELECT, {
+    apiFetch(API.SELECT, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ select, table }),

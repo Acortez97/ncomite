@@ -14,6 +14,7 @@ import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
 
 import { API } from "../Api/api.config";
+import { apiFetch } from "../Api/apiFetch";
 
 const API_URL = API.SELECT;
 
@@ -103,7 +104,7 @@ export default function VerUsuarios() {
   const [searchQuery, setSearchQuery] = React.useState('');
 
   React.useEffect(() => {
-    fetch(API_URL, {
+    apiFetch(API_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ select: '*', table: 'usuarios' ,orderBy: 'Nombre ASC'})

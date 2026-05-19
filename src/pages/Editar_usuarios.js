@@ -13,6 +13,7 @@ import { visuallyHidden } from '@mui/utils';
 import Swal from 'sweetalert2';
 import withReactContent from 'sweetalert2-react-content';
 import { API } from "../Api/api.config";
+import { apiFetch } from "../Api/apiFetch";
 
 const MySwal = withReactContent(Swal);
 
@@ -139,7 +140,7 @@ function EditUserForm({ user, onSave, onCancel }) {
     const guardar = async () => {
         setLoading(true);
         try {
-            const res = await fetch(API_UPDATE, {
+            const res = await apiFetch(API_UPDATE, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -201,7 +202,7 @@ export default function Ver_usuarios() {
     const [dense, setDense] = React.useState(false);
 
     React.useEffect(() => {
-        fetch(API_SELECT, {
+        apiFetch(API_SELECT, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ select: '*', table: 'usuarios' }),
@@ -264,7 +265,7 @@ export default function Ver_usuarios() {
             cancelButtonText: 'Cancelar',
         }).then(async (result) => {
             if (result.isConfirmed) {
-                const res = await fetch(API_UPDATE, {
+                const res = await apiFetch(API_UPDATE, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({

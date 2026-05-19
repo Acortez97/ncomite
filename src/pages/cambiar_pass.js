@@ -1,5 +1,6 @@
 import { useState } from "react";
 import Swal from "sweetalert2";
+import { apiFetch } from "../Api/apiFetch";
 
 export default function ClienteForgotPassword() {
   const [usuario, setUsuario] = useState("");
@@ -10,7 +11,7 @@ export default function ClienteForgotPassword() {
   const validarUsuario = async (e) => {
     e.preventDefault();
 
-    const res = await fetch("/api/forgot_password.php", {
+    const res = await apiFetch("/api/forgot_password.php", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ usuario }),
@@ -35,7 +36,7 @@ export default function ClienteForgotPassword() {
       return;
     }
 
-    const res = await fetch("/api/reset_password.php", {
+    const res = await apiFetch("/api/reset_password.php", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ usuario, password }),

@@ -1,6 +1,8 @@
 <?php
 header("Content-Type: application/json");
 require "../db.php";
+require "../auth_check.php";
+verificarToken($conn);
 
 $input = json_decode(file_get_contents("php://input"), true);
 

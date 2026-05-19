@@ -7,6 +7,7 @@ import {
 import SearchIcon from "@mui/icons-material/Search";
 import { visuallyHidden } from "@mui/utils";
 import { API } from "../Api/api.config";
+import { apiFetch } from "../Api/apiFetch";
 
 const API_SELECT = API.SELECT;
 
@@ -70,7 +71,7 @@ export default function VerAdeudos() {
   const [dense,     setDense]     = useState(false);
 
   const load = async (select, table) => {
-    const res = await fetch(API_SELECT, {
+    const res = await apiFetch(API_SELECT, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ select, table }),

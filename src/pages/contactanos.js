@@ -2,6 +2,7 @@ import React, { useState, useContext } from "react";
 import Swal from "sweetalert2";
 import { AuthContext } from "../context/authContext";
 import { API } from "../Api/api.config";
+import { apiFetch } from "../Api/apiFetch";
 
 const API_CONTACTO = API.SEND_MAIL;
 
@@ -30,7 +31,7 @@ export default function ClienteContacto() {
         };
 
         try {
-            const res = await fetch(API_CONTACTO, {
+            const res = await apiFetch(API_CONTACTO, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(payload),

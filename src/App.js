@@ -82,7 +82,7 @@ function App({ Component, pageProps }) {
             <Route path="/Ver_useradmin" element={<ProtectedRoute rolesAllowed={["admin"]}><Layout><VerUsersAdmin /></Layout></ProtectedRoute>} />
             <Route path="/Registro_users" element={<ProtectedRoute rolesAllowed={["admin"]}><Layout><RegistroUsersAdmin /></Layout></ProtectedRoute>} />
             <Route path="/Ver_clientes" element={<ProtectedRoute rolesAllowed={["admin"]}><Layout><VerClientes /></Layout></ProtectedRoute>} />
-            <Route path="/Ver_adeudos" element={<ProtectedRoute rolesAllowed={["admin", "caja"]}><Layout><VerAdeudos /></Layout></ProtectedRoute>} />
+            <Route path="/Ver_adeudos" element={<ProtectedRoute rolesAllowed={["admin", "caja", "usuario"]}><Layout><VerAdeudos /></Layout></ProtectedRoute>} />
             <Route path="/Registro_Pcontratos" element={<ProtectedRoute rolesAllowed={["admin", "caja"]}><Layout><RegistroPagosContratos /></Layout></ProtectedRoute>} />
 
             <Route path="/cliente_datos" element={<ProtectedRoute rolesAllowed={["cliente"]}><Layout><ClientePerfil /></Layout></ProtectedRoute>} />

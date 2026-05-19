@@ -1,6 +1,8 @@
 <?php
 header("Content-Type: application/json");
 require "../db.php";
+require "../auth_check.php";
+verificarToken($conn);
 
 // Usamos LEFT JOIN para traer a TODOS los usuarios, existan o no en login
 $sql = "

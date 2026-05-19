@@ -1,9 +1,10 @@
-﻿import React, { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import Swal from "sweetalert2";
 import jsPDF from "jspdf";
 import "./animaciones.css";
 
 import { API } from "../Api/api.config";
+import { apiFetch } from "../Api/apiFetch";
 
 /* ====== API URLs ====== */
 const API_SELECT = API.SELECT;
@@ -198,7 +199,7 @@ export default function CajaHome() {
 
   /* CARGAR USUARIOS */
   const cargarUsuarios = () => {
-    fetch(API_SELECT, {
+    apiFetch(API_SELECT, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ select: "*", table: "usuarios" }),
@@ -209,7 +210,7 @@ export default function CajaHome() {
 
   /* CARGAR CONTRATOS */
   const cargarContratos = () => {
-    fetch(API_SELECT, {
+    apiFetch(API_SELECT, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ select: "*", table: "contratos" }),
@@ -226,7 +227,7 @@ export default function CajaHome() {
 
   /* CARGAR ADEUDOS */
   const cargarAdeudos = () => {
-    fetch(API_SELECT, {
+    apiFetch(API_SELECT, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ select: "*", table: "adeudos" }),
@@ -362,7 +363,7 @@ export default function CajaHome() {
         },
       };
 
-      const resPago = await fetch(API_INSERT, {
+      const resPago = await apiFetch(API_INSERT, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payloadPago),
@@ -381,7 +382,7 @@ export default function CajaHome() {
         idValue: adeudo.id_adeudo,
       };
 
-      await fetch(API_UPDATE, {
+      await apiFetch(API_UPDATE, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payloadAdeudo),

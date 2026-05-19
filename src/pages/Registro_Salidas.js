@@ -4,6 +4,7 @@ import { AuthContext } from "../context/authContext";
 import { FaMoneyBillWave } from "react-icons/fa";
 
 import { API } from "../Api/api.config";
+import { apiFetch } from "../Api/apiFetch";
 
 const API_INSERT_SALIDA = API.INSERT;
 
@@ -35,7 +36,7 @@ export default function RegistroSalidas() {
     }
     setLoading(true);
     try {
-      const res = await fetch(API_INSERT_SALIDA, {
+      const res = await apiFetch(API_INSERT_SALIDA, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

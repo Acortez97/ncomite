@@ -6,6 +6,7 @@ import {
 } from "react-icons/fa";
 
 import { API } from "../Api/api.config";
+import { apiFetch } from "../Api/apiFetch";
 
 const API_SELECT_USUARIO   = API.SELECT_WHERE;
 const API_SELECT_CONTRATOS = API.SELECT_WHERE;
@@ -24,7 +25,7 @@ export default function ClientePerfil() {
       try {
         setLoading(true);
 
-        const resUsuario = await fetch(API_SELECT_USUARIO, {
+        const resUsuario = await apiFetch(API_SELECT_USUARIO, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -37,7 +38,7 @@ export default function ClientePerfil() {
         const dataUsuario = await resUsuario.json();
         if (!dataUsuario.error && dataUsuario.length > 0) setInfoUsuario(dataUsuario[0]);
 
-        const resContratos = await fetch(API_SELECT_CONTRATOS, {
+        const resContratos = await apiFetch(API_SELECT_CONTRATOS, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({

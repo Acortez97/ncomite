@@ -1,6 +1,8 @@
 <?php
 header("Content-Type: application/json");
 require_once __DIR__ . '/../db.php';
+require_once __DIR__ . '/../auth_check.php';
+verificarToken($conn);
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     http_response_code(405);

@@ -7,6 +7,7 @@ import {
   FaFilePdf, FaInbox,
 } from "react-icons/fa";
 import { API } from "../Api/api.config";
+import { apiFetch } from "../Api/apiFetch";
 
 const fmt = (n) => `$${Number(n).toLocaleString("es-MX", { minimumFractionDigits: 2 })}`;
 
@@ -21,7 +22,7 @@ export default function ClienteEstadoCuenta() {
     if (!user?.id_usuario) return;
 
     Promise.all([
-      fetch(API.SELECT_WHERE, {
+      apiFetch(API.SELECT_WHERE, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -36,7 +37,7 @@ export default function ClienteEstadoCuenta() {
       if (!c.length) { setLoading(false); return; }
 
       const fetches = c.map((contrato) =>
-        fetch(API.GET_ADEUDOS, {
+        apiFetch(API.GET_ADEUDOS, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ id_usuario: user.id_usuario, id_contrato: contrato.id_contrato }),

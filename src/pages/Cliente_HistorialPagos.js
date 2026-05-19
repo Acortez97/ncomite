@@ -6,6 +6,7 @@ import {
   FaMoneyBillWave, FaFileExcel, FaSearch, FaInbox,
 } from "react-icons/fa";
 import { API } from "../Api/api.config";
+import { apiFetch } from "../Api/apiFetch";
 
 const fmt = (n) => `$${Number(n).toLocaleString("es-MX", { minimumFractionDigits: 2 })}`;
 
@@ -18,7 +19,7 @@ export default function ClienteHistorialPagos() {
   useEffect(() => {
     if (!user?.id_usuario) return;
 
-    fetch(API.SELECT_JOIN, {
+    apiFetch(API.SELECT_JOIN, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({

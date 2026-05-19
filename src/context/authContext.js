@@ -1,11 +1,11 @@
 import React, { createContext, useState, useEffect } from "react";
+import { API } from "../Api/api.config";
 
 export const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
 
-  // Recuperar usuario desde localStorage
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
     if (storedUser) {
@@ -18,7 +18,21 @@ export const AuthProvider = ({ children }) => {
     localStorage.setItem("user", JSON.stringify(userData));
   };
 
-  const logout = () => {
+  const logout = async () => {
+    const stored = localStorage.getItem("user");
+    if (stored) {
+      try {
+        const { token } = JSON.parse(stored);
+        if (token) {
+          await fetch(API.LOGOUT, {
+            method: "POST",
+            headers: { Authorization: `Bearer ${token}` },
+          });
+        }
+      } catch {
+        // best-effort, ignore network errors on logout
+      }
+    }
     setUser(null);
     localStorage.removeItem("user");
   };
