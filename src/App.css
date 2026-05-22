@@ -140,12 +140,12 @@
 
 /* ===== PAGE ===== */
 .login-page {
-  min-height: 95vh;
+  min-height: 100vh;
   background: linear-gradient(180deg, #0f4c75, #3282b8);
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 30px 15px;
+  padding: 30px 15px 70px;
   position: relative;
   overflow: hidden;
 }
@@ -157,6 +157,7 @@
   font-size: clamp(18px, 3vw, 28px);
   margin-bottom: 30px;
   z-index: 2;
+  position: relative;
   text-shadow: 1px 1px 4px rgba(0, 0, 0, 0.5);
 }
 
@@ -169,6 +170,7 @@
   width: 100%;
   max-width: 900px;
   z-index: 2;
+  position: relative;
 }
 
 /* ===== IMAGE ===== */
@@ -184,9 +186,10 @@
   width: 100%;
   max-width: 380px;
   background: #fff;
-  padding: 22px;
-  border-radius: 14px;
-  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.3);
+  padding: 28px 26px;
+  border-radius: 16px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.35);
+  animation: cardIn 0.5s ease both;
 }
 
 /* ===== TOGGLE ===== */
@@ -244,34 +247,71 @@
   cursor: not-allowed;
 }
 
-/* ===== WAVES ===== */
-.wave {
+/* ===== BLOBS ===== */
+.blob {
   position: absolute;
-  bottom: -60px;
-  width: 200%;
-  height: 140px;
   border-radius: 50%;
+  filter: blur(60px);
+  opacity: 0.5;
+  pointer-events: none;
+  z-index: 0;
+  /* tamaños en vw para que escalen con la pantalla */
+  width: clamp(200px, 40vw, 520px);
+  height: clamp(200px, 40vw, 520px);
 }
 
-.wave1 {
-  background: rgba(255, 255, 255, 0.25);
-  animation: waveMove 10s linear infinite;
+.blob1 {
+  background: #90e0ef;
+  top: -10%;
+  left: -10%;
+  animation: blob1Move 16s ease-in-out infinite;
 }
 
-.wave2 {
-  background: rgba(255, 255, 255, 0.15);
-  bottom: -80px;
-  animation: waveMove 16s linear infinite reverse;
+.blob2 {
+  background: #ade8f4;
+  top: 40%;
+  right: -8%;
+  width: clamp(160px, 32vw, 420px);
+  height: clamp(160px, 32vw, 420px);
+  animation: blob2Move 22s ease-in-out infinite;
 }
 
-/* ===== ANIMATION ===== */
-@keyframes waveMove {
-  from {
-    transform: translateX(0);
-  }
-  to {
-    transform: translateX(-50%);
-  }
+.blob3 {
+  background: #48cae4;
+  bottom: -8%;
+  left: 15%;
+  width: clamp(140px, 28vw, 380px);
+  height: clamp(140px, 28vw, 380px);
+  animation: blob3Move 14s ease-in-out infinite;
+}
+
+/* Cada blob tiene su propio keyframe para trayectorias distintas */
+@keyframes blob1Move {
+  0%   { transform: translate(0, 0); }
+  25%  { transform: translate(12vw, 8vh); }
+  50%  { transform: translate(6vw, 20vh); }
+  75%  { transform: translate(-4vw, 10vh); }
+  100% { transform: translate(0, 0); }
+}
+
+@keyframes blob2Move {
+  0%   { transform: translate(0, 0); }
+  30%  { transform: translate(-14vw, -12vh); }
+  60%  { transform: translate(-8vw, 10vh); }
+  100% { transform: translate(0, 0); }
+}
+
+@keyframes blob3Move {
+  0%   { transform: translate(0, 0); }
+  20%  { transform: translate(8vw, -10vh); }
+  50%  { transform: translate(16vw, -6vh); }
+  75%  { transform: translate(4vw, -14vh); }
+  100% { transform: translate(0, 0); }
+}
+
+@keyframes cardIn {
+  from { opacity: 0; transform: translateY(24px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
 /* ===== RESPONSIVE ===== */

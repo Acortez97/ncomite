@@ -16,39 +16,98 @@ export default function Login() {
 
   // 🔹 POPUP PROFESIONAL (POWERED BY)
   const showInfo = () => {
+    const stack = [
+      { label: "React", color: "#61dafb", bg: "#e8f9fe" },
+      { label: "Node.js", color: "#3d9970", bg: "#e8f5ee" },
+      { label: "PHP", color: "#7b7fb5", bg: "#eeeff8" },
+      { label: "Python", color: "#3776ab", bg: "#e8f1fb" },
+      { label: "MySQL", color: "#e48e00", bg: "#fdf3e0" },
+      { label: "Azure", color: "#0078d4", bg: "#e5f2fd" },
+      { label: "AWS", color: "#e25c1a", bg: "#fdeee8" },
+      { label: "IA / LLMs", color: "#6d28d9", bg: "#f0ebff" },
+    ];
+
     Swal.fire({
-      title: "Comité del Agua de San Gaspar Tlahuelilpan, Metepec, Edo. Méx.",
       html: `
-    <div style="text-align:center">
-      <h3>Solución desarrollada por</h3>
-      <h2 style="color:#0077b6;">Adrian Cortez</h2>
+        <div style="font-family:'Segoe UI',Arial,sans-serif; padding:4px 0 8px;">
 
-      <p style="margin-top:10px;">
-        Desarrollo de sistemas web a la medida
-      </p>
+          <!-- Avatar con iniciales -->
+          <div style="
+            width:76px; height:76px; border-radius:50%;
+            background:linear-gradient(135deg,#1a1a2e,#16213e,#0f3460);
+            display:flex; align-items:center; justify-content:center;
+            margin:0 auto 14px;
+            box-shadow:0 6px 24px rgba(0,0,0,0.28);
+            font-size:1.55rem; font-weight:800; color:#fff;
+            letter-spacing:1px;
+          ">AC</div>
 
-      <hr/>
+          <!-- Nombre y rol -->
+          <h2 style="margin:0 0 3px; font-size:1.45rem; color:#0f3460; font-weight:700; letter-spacing:-.3px;">
+            Adrian Cortez
+          </h2>
+          <p style="margin:0 0 2px; color:#444; font-size:0.88rem; font-weight:600;">
+            Desarrollador de Software &amp; Consultor Tecnológico
+          </p>
+          <p style="margin:0 0 20px; color:#888; font-size:0.78rem;">
+            Desarrollo a la medida · Integraciones con IA · Cloud · Soporte
+          </p>
 
-      <p><b>Tecnologías:</b></p>
-      <p>React • PHP • MySQL • AWS</p>
+          <!-- Stack tecnológico -->
+          <div style="
+            background:#f8f9fb; border:1px solid #eaecf0; border-radius:10px;
+            padding:14px 12px; margin-bottom:18px;
+          ">
+            <p style="margin:0 0 10px; font-size:0.72rem; font-weight:700; color:#999; text-transform:uppercase; letter-spacing:1px;">
+              Stack &amp; Tecnologías
+            </p>
+            <div style="display:flex; flex-wrap:wrap; gap:7px; justify-content:center;">
+              ${stack.map(t => `
+                <span style="
+                  background:${t.bg}; color:${t.color};
+                  border:1px solid ${t.color}33;
+                  border-radius:6px; padding:4px 11px;
+                  font-size:0.76rem; font-weight:700;
+                ">${t.label}</span>
+              `).join("")}
+            </div>
+          </div>
 
-      <hr/>
+          <!-- Contacto -->
+          <div style="display:flex; flex-direction:column; gap:8px; align-items:center;">
+            <a href="mailto:adriancortezv97@gmail.com" style="
+              display:flex; align-items:center; gap:10px;
+              background:#fff; border:1.5px solid #e2e8f0;
+              border-radius:9px; padding:10px 18px; text-decoration:none;
+              color:#1a202c; font-size:0.85rem; font-weight:500;
+              width:100%; max-width:290px; box-sizing:border-box;
+            ">
+              <span style="font-size:1rem;">✉️</span>
+              <span>adriancortezv97@gmail.com</span>
+            </a>
+            <a href="tel:+527295426360" style="
+              display:flex; align-items:center; gap:10px;
+              background:#fff; border:1.5px solid #e2e8f0;
+              border-radius:9px; padding:10px 18px; text-decoration:none;
+              color:#1a202c; font-size:0.85rem; font-weight:500;
+              width:100%; max-width:290px; box-sizing:border-box;
+            ">
+              <span style="font-size:1rem;">📱</span>
+              <span>+52 729 542 6360</span>
+            </a>
+          </div>
 
-      <p><b>Contacto</b></p>
-      <p style="margin:5px 0;">📧 adriancortezv97@gmail.com</p>
-      <p style="margin:5px 0;">📱 +52 729 542 6360</p>
-
-      <p style="font-size:12px; margin-top:10px;">
-        Soporte, mejoras o nuevos desarrollos
-      </p>
-
-      <p style="margin-top:15px; font-size:12px;">
-        © ${new Date().getFullYear()} Todos los derechos reservados
-      </p>
-    </div>
-  `,
+          <p style="margin:18px 0 0; font-size:0.72rem; color:#c0c0c0;">
+            © ${new Date().getFullYear()} Adrian Cortez — Todos los derechos reservados
+          </p>
+        </div>
+      `,
+      showConfirmButton: true,
       confirmButtonText: "Cerrar",
-      width: 500,
+      confirmButtonColor: "#0f3460",
+      width: 460,
+      padding: "30px 28px 24px",
+      background: "#fff",
     });
   };
 
@@ -101,9 +160,10 @@ export default function Login() {
 
   return (
     <div className="login-page">
-      {/* Olas animadas */}
-      <div className="wave wave1"></div>
-      <div className="wave wave2"></div>
+      {/* Blobs animados */}
+      <div className="blob blob1"></div>
+      <div className="blob blob2"></div>
+      <div className="blob blob3"></div>
 
       <h1 className="login-title">
         Página Oficial del Comité del Agua de San Gaspar Tlahuelilpan, Metepec.
@@ -169,9 +229,9 @@ export default function Login() {
         </div>
       </div>
 
-      {/* 🔹 FOOTER DISCRETO (NO INTERFIERE CON NADA) */}
-      <div style={styles.footer}>
-        © {new Date().getFullYear()} Comité del Agua de San Gaspar Tlahuelilpan, Metepec, Edo Méx. |{" "}
+      {/* FOOTER */}
+      <div style={{ ...styles.footer, whiteSpace: "normal", textAlign: "center", lineHeight: 1.6 }}>
+        © {new Date().getFullYear()} Comité del Agua, San Gaspar Tlahuelilpan &nbsp;·&nbsp;{" "}
         <span onClick={showInfo} style={styles.link}>
           Powered by Adrian Cortez
         </span>
@@ -184,16 +244,26 @@ export default function Login() {
 const styles = {
   footer: {
     position: "fixed",
-    bottom: "10px",
-    width: "100%",
-    textAlign: "center",
-    fontSize: "12px",
-    color: "#ffffffcc",
+    bottom: "12px",
+    left: "50%",
+    transform: "translateX(-50%)",
+    whiteSpace: "nowrap",
+    background: "rgba(0,0,0,0.45)",
+    backdropFilter: "blur(6px)",
+    borderRadius: "20px",
+    padding: "6px 18px",
+    fontSize: "11px",
+    color: "#ffffffdd",
     zIndex: 10,
+    maxWidth: "92vw",
+    overflow: "hidden",
+    textOverflow: "ellipsis",
   },
   link: {
     color: "#90e0ef",
     cursor: "pointer",
     fontWeight: "bold",
+    textDecoration: "underline",
+    textDecorationColor: "transparent",
   },
 };
