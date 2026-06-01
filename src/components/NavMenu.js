@@ -4,7 +4,7 @@ import { AuthContext } from "../context/authContext";
 import {
   FaHome, FaUsers, FaFileContract, FaMoneyBillWave, FaUserShield,
   FaExclamationTriangle, FaSignOutAlt, FaChevronDown, FaChevronUp,
-  FaBars, FaTimes, FaTint, FaChartBar, FaClock,
+  FaBars, FaTimes, FaTint, FaChartBar, FaClock, FaMapMarkedAlt,
 } from "react-icons/fa";
 
 const iconMap = {
@@ -19,6 +19,7 @@ const iconMap = {
   "Reportes":             <FaChartBar />,
   "Actividad":            <FaClock />,
   "Mi Cuenta":            <FaFileContract />,
+  "Mapa":                 <FaMapMarkedAlt />,
 };
 
 export default function NavMenu() {
@@ -108,6 +109,7 @@ export default function NavMenu() {
           { path: "/Reporte_Actividad", label: "Actividad Reciente" },
         ],
       },
+      { label: "Mapa", path: "/Mapa" },
     ],
 
     caja: [
@@ -145,6 +147,7 @@ export default function NavMenu() {
           { path: "/Ver_adeudos",      label: "Ver adeudos" },
         ],
       },
+      { label: "Mapa", path: "/Mapa" },
     ],
 
     cliente: [
@@ -166,7 +169,7 @@ export default function NavMenu() {
   const isGroupActive = (children) => children?.some(c => location.pathname === c.path);
 
   // Rutas siempre visibles sin importar permisos
-  const RUTAS_EXENTAS = ["/Admin", "/Caja", "/Usuario", "/Cliente", "/Registro_users", "/Ver_useradmin"];
+  const RUTAS_EXENTAS = ["/Admin", "/Caja", "/Usuario", "/Cliente", "/Registro_users", "/Ver_useradmin", "/Mapa"];
 
   const puedeVer = (path) => {
     if (RUTAS_EXENTAS.includes(path)) return true;

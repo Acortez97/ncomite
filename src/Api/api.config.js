@@ -30,4 +30,11 @@ export const API = {
   // OTROS
   DASHBOARD:            "/api/dashboard/GeneralDashboard.php",
   SEND_MAIL:            "/api/send_mail.php",
+
+  // MAPA
+  MAPA_BUSCAR_CONTRATO:     "/api/mapa/buscar_contrato.php",
+  MAPA_GUARDAR_UBICACION:   "/api/mapa/guardar_ubicacion.php",
+  MAPA_OBTENER_UBICACIONES: "/api/mapa/obtener_ubicaciones.php",
+  MAPA_IMPORTAR_KML:        "/api/mapa/importar_kml.php",
+  MAPA_LIMPIAR:             "/api/mapa/limpiar_ubicaciones.php",
 };

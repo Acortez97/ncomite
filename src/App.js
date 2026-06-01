@@ -37,6 +37,7 @@ import ReporteActividad from "./pages/Reporte_Actividad";
 import ClienteEstadoCuenta from "./pages/Cliente_EstadoCuenta";
 import ClienteHistorialPagos from "./pages/Cliente_HistorialPagos";
 import ClienteHistorialAportaciones from "./pages/Cliente_HistorialAportaciones";
+import Mapa from "./pages/Mapa";
 
 import AdminHome from "./pages/Admin";
 import CajaHome from "./pages/Caja";
@@ -97,6 +98,9 @@ function App({ Component, pageProps }) {
             <Route path="/Cliente_EstadoCuenta"       element={<ProtectedRoute rolesAllowed={["cliente"]}><Layout><ClienteEstadoCuenta /></Layout></ProtectedRoute>} />
             <Route path="/Cliente_HistorialPagos"     element={<ProtectedRoute rolesAllowed={["cliente"]}><Layout><ClienteHistorialPagos /></Layout></ProtectedRoute>} />
             <Route path="/Cliente_HistorialAportaciones" element={<ProtectedRoute rolesAllowed={["cliente"]}><Layout><ClienteHistorialAportaciones /></Layout></ProtectedRoute>} />
+
+            {/* ── Mapa de Tomas de Agua ── */}
+            <Route path="/Mapa" element={<ProtectedRoute rolesAllowed={["admin", "usuario"]}><Mapa /></ProtectedRoute>} />
 
 
 

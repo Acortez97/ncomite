@@ -62,6 +62,30 @@ if ($user) {
 }
 
 if (!$passwordOk) {
+    // ¿Las credenciales son válidas en el login de CLIENTE? (login equivocado)
+    $chk = $conn->prepare("
+        SELECT cl.pass
+        FROM clientes_login cl
+        JOIN usuarios u ON cl.id_usuario = u.id_usuario
+        WHERE cl.usuario = ? AND cl.status = 1 AND u.status = 1
+        LIMIT 1
+    ");
+    $chk->bind_param("s", $usuario);
+    $chk->execute();
+    $otro = $chk->get_result()->fetch_assoc();
+    $chk->close();
+
+    if ($otro && (password_verify($pass, $otro['pass']) || md5($pass) === $otro['pass'])) {
+        // Credenciales correctas pero en el login equivocado — no es un fallo real
+        http_response_code(401);
+        echo json_encode([
+            "message"       => "Esta cuenta es de Cliente. Selecciona la pestaña \"Cliente\" para iniciar sesión.",
+            "code"          => "WRONG_LOGIN",
+            "tipo_correcto" => "cliente"
+        ]);
+        exit;
+    }
+
     rl_registrarFallo($conn, $ip);
     http_response_code(401);
     echo json_encode(["message" => "Credenciales incorrectas"]);

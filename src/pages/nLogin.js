@@ -3,7 +3,6 @@ import { useNavigate, Navigate } from "react-router-dom";
 import { AuthContext } from "../context/authContext";
 import Swal from "sweetalert2";
 import "../App.css";
-import { apiFetch } from "../Api/apiFetch";
 
 export default function Login() {
   const navigate = useNavigate();
@@ -128,13 +127,36 @@ export default function Login() {
         : "/api/login_cliente.php";
 
     try {
-      const res = await apiFetch(endpoint, {
+      // fetch directo (no apiFetch) — el login devuelve 401 en credenciales
+      // incorrectas y apiFetch redirige a /login en cualquier 401, recargando la página
+      const res = await fetch(endpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ usuario, pass }),
       });
 
       const data = await res.json();
+
+      // Login equivocado: las credenciales son válidas pero en la otra pestaña
+      if (!res.ok && data.code === "WRONG_LOGIN") {
+        const correcto = data.tipo_correcto; // "admin" | "cliente"
+        const labelCorrecto = correcto === "admin" ? "Administrador" : "Cliente";
+        const result = await Swal.fire({
+          icon: "warning",
+          title: "Login incorrecto",
+          text: data.message,
+          showCancelButton: true,
+          confirmButtonText: `Ir al login de ${labelCorrecto}`,
+          cancelButtonText: "Cancelar",
+          confirmButtonColor: "#0f3460",
+        });
+        if (result.isConfirmed) {
+          setTipo(correcto);
+        }
+        setLoading(false);
+        return;
+      }
+
       if (!res.ok) throw new Error(data.message || "Error en login");
 
       login(data.user);

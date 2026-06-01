@@ -5,7 +5,7 @@ import { AuthContext } from "../context/authContext";
 // Rutas que no requieren verificación de permisos (accesibles con solo tener el rol correcto)
 const RUTAS_EXENTAS = [
   "/Admin", "/Caja", "/Usuario", "/Cliente",
-  "/Registro_users", "/Ver_useradmin",
+  "/Registro_users", "/Ver_useradmin", "/Mapa",
 ];
 
 export default function ProtectedRoute({ children, rolesAllowed }) {

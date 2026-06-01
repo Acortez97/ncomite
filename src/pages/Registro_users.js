@@ -50,6 +50,12 @@ const GRUPOS_MODULOS = [
       { label: "Actividad Reciente", path: "/Reporte_Actividad" },
     ],
   },
+  {
+    grupo: "Mapa de Tomas",
+    modulos: [
+      { label: "Mapa de ubicaciones", path: "/Mapa" },
+    ],
+  },
 ];
 
 // Permisos predeterminados según el rol seleccionado

@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cotización — Módulo de Geolocalización | Comité del Agua</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Segoe UI', Arial, sans-serif;
+    color: #1a202c;
+    line-height: 1.55;
+    background: #f1f5f9;
+    padding: 24px;
+  }
+  .hoja {
+    max-width: 850px;
+    margin: 0 auto;
+    background: #fff;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.1);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+
+  /* ── Encabezado ── */
+  .header {
+    background: linear-gradient(135deg, #0f3460, #16213e);
+    color: #fff;
+    padding: 36px 44px 28px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+  }
+  .header .marca h1 { font-size: 1.7rem; font-weight: 800; letter-spacing: -.5px; }
+  .header .marca p  { font-size: .82rem; opacity: .85; margin-top: 2px; }
+  .avatar {
+    width: 64px; height: 64px; border-radius: 50%;
+    background: rgba(255,255,255,.12); border: 2px solid rgba(255,255,255,.3);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.3rem; font-weight: 800;
+  }
+  .folio {
+    text-align: right; font-size: .8rem; opacity: .9; margin-top: 10px;
+  }
+  .folio b { font-size: .95rem; }
+
+  /* ── Bloque cliente / proveedor ── */
+  .partes {
+    display: flex; gap: 24px; padding: 28px 44px;
+    border-bottom: 2px solid #eef2f7;
+  }
+  .partes .col { flex: 1; }
+  .partes h3 {
+    font-size: .72rem; text-transform: uppercase; letter-spacing: 1px;
+    color: #94a3b8; margin-bottom: 6px;
+  }
+  .partes .dato { font-size: .9rem; }
+  .partes .dato b { color: #0f3460; }
+
+  /* ── Secciones ── */
+  .seccion { padding: 26px 44px; }
+  .seccion h2 {
+    font-size: 1.05rem; color: #0f3460; font-weight: 700;
+    border-left: 4px solid #0ea5e9; padding-left: 12px; margin-bottom: 16px;
+  }
+  .resumen {
+    background: #f0f9ff; border: 1px solid #bae6fd; border-radius: 8px;
+    padding: 16px 20px; font-size: .9rem; color: #0c4a6e;
+  }
+
+  /* ── Tabla de partidas ── */
+  table { width: 100%; border-collapse: collapse; font-size: .86rem; }
+  thead th {
+    background: #0f3460; color: #fff; text-align: left;
+    padding: 10px 12px; font-weight: 600; font-size: .8rem;
+  }
+  thead th:last-child, tbody td:last-child { text-align: right; }
+  tbody td { padding: 11px 12px; border-bottom: 1px solid #eef2f7; vertical-align: top; }
+  tbody tr:nth-child(even) { background: #f8fafc; }
+  .partida-titulo { font-weight: 700; color: #0f3460; }
+  .partida-desc { font-size: .8rem; color: #64748b; margin-top: 3px; }
+
+  /* ── Totales ── */
+  .totales {
+    margin-top: 18px; margin-left: auto; width: 340px;
+    font-size: .9rem;
+  }
+  .totales .linea {
+    display: flex; justify-content: space-between;
+    padding: 7px 12px;
+  }
+  .totales .linea.sub { border-top: 1px solid #e2e8f0; }
+  .totales .total {
+    background: #0f3460; color: #fff; font-weight: 800; font-size: 1.05rem;
+    border-radius: 8px; padding: 14px 16px; margin-top: 8px;
+    display: flex; justify-content: space-between;
+  }
+  .rango {
+    text-align: center; margin-top: 10px; font-size: .78rem; color: #64748b;
+  }
+
+  /* ── Listas ── */
+  .lista { list-style: none; }
+  .lista li {
+    padding: 6px 0 6px 26px; position: relative; font-size: .88rem;
+  }
+  .lista li::before {
+    content: "✓"; position: absolute; left: 0; top: 6px;
+    color: #0ea5e9; font-weight: 800;
+  }
+
+  /* ── Opcionales ── */
+  .opcional-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .opcional-card {
+    border: 1px solid #e2e8f0; border-radius: 8px; padding: 14px 16px;
+  }
+  .opcional-card h4 { font-size: .9rem; color: #0f3460; margin-bottom: 4px; }
+  .opcional-card .precio { font-weight: 800; color: #0ea5e9; font-size: 1rem; }
+  .opcional-card p { font-size: .78rem; color: #64748b; margin-top: 4px; }
+
+  /* ── Términos ── */
+  .terminos { font-size: .82rem; color: #475569; }
+  .terminos li { padding: 4px 0 4px 22px; position: relative; }
+  .terminos li::before {
+    content: "•"; position: absolute; left: 6px; color: #0ea5e9; font-weight: 800;
+  }
+
+  /* ── Footer ── */
+  .footer {
+    background: #f8fafc; padding: 24px 44px;
+    border-top: 2px solid #eef2f7; font-size: .8rem; color: #64748b;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .firma { text-align: center; }
+  .firma .linea-firma {
+    border-top: 1.5px solid #94a3b8; width: 220px; margin: 40px auto 6px;
+  }
+
+  .badge {
+    display: inline-block; background: #dcfce7; color: #166534;
+    font-size: .72rem; font-weight: 700; padding: 2px 10px;
+    border-radius: 20px; margin-left: 8px;
+  }
+
+  @media print {
+    body { background: #fff; padding: 0; }
+    .hoja { box-shadow: none; border-radius: 0; }
+    .no-print { display: none; }
+  }
+  .btn-print {
+    display: block; max-width: 850px; margin: 0 auto 16px;
+    background: #0ea5e9; color: #fff; border: none; padding: 12px;
+    border-radius: 8px; font-size: .95rem; font-weight: 700; cursor: pointer;
+    box-shadow: 0 2px 8px rgba(14,165,233,.3);
+  }
+</style>
+</head>
+<body>
+
+<button class="btn-print no-print" onclick="window.print()">🖨️ Imprimir / Guardar como PDF</button>
+
+<div class="hoja">
+
+  <!-- ENCABEZADO -->
+  <div class="header">
+    <div class="marca">
+      <h1>Adrian Cortez</h1>
+      <p>Desarrollo de Software &amp; Consultoría Tecnológica</p>
+      <div class="folio">
+        <div><b>COTIZACIÓN</b></div>
+        <div>Folio: COT-2026-014</div>
+        <div>Fecha: 01 de junio de 2026</div>
+        <div>Vigencia: 30 días naturales</div>
+      </div>
+    </div>
+    <div class="avatar">AC</div>
+  </div>
+
+  <!-- PARTES -->
+  <div class="partes">
+    <div class="col">
+      <h3>Proveedor</h3>
+      <div class="dato"><b>Adrian Cortez</b></div>
+      <div class="dato">Desarrollador de Software Full-Stack</div>
+      <div class="dato">adriancortezv97@gmail.com</div>
+      <div class="dato">+52 729 542 6360</div>
+    </div>
+    <div class="col">
+      <h3>Cliente</h3>
+      <div class="dato"><b>Comité del Agua</b></div>
+      <div class="dato">San Gaspar Tlahuelilpan</div>
+      <div class="dato">Metepec, Estado de México</div>
+      <div class="dato">Sistema en producción: comitedeaguasangaspartl.com</div>
+    </div>
+  </div>
+
+  <!-- RESUMEN -->
+  <div class="seccion">
+    <h2>Resumen del proyecto</h2>
+    <div class="resumen">
+      Desarrollo e integración de un <b>Módulo de Geolocalización (GIS)</b> sobre el sistema
+      administrativo existente del Comité del Agua, que permite registrar y visualizar en un mapa
+      interactivo la ubicación exacta de las <b>tomas de agua de cada cliente</b> y las
+      <b>válvulas principales de la red</b>, con captura en campo desde dispositivos móviles,
+      detección automática de sectores y un panel de administración integrado. Incluye además
+      mejoras de seguridad al sistema de acceso (login).
+    </div>
+  </div>
+
+  <!-- PARTIDAS -->
+  <div class="seccion">
+    <h2>Desglose de partidas</h2>
+    <table>
+      <thead>
+        <tr>
+          <th style="width:50px;">#</th>
+          <th>Concepto</th>
+          <th style="width:140px;">Importe (MXN)</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>1</td>
+          <td>
+            <div class="partida-titulo">Análisis, arquitectura y diseño de base de datos</div>
+            <div class="partida-desc">
+              Estudio de requerimientos, definición de la estructura de datos georreferenciada,
+              integración con las tablas existentes (clientes, contratos, adeudos) y diseño de la
+              solución (PWA vs. app móvil).
+            </div>
+          </td>
+          <td>$3,800</td>
+        </tr>
+        <tr>
+          <td>2</td>
+          <td>
+            <div class="partida-titulo">Backend — API REST de geolocalización (PHP + MySQL)</div>
+            <div class="partida-desc">
+              Cinco servicios web seguros: alta/edición de ubicaciones, consulta con filtros,
+              búsqueda de contratos con autollenado, limpieza administrativa e importador de
+              Google Maps (KML). Tabla georreferenciada con relaciones e índices.
+            </div>
+          </td>
+          <td>$7,200</td>
+        </tr>
+        <tr>
+          <td>3</td>
+          <td>
+            <div class="partida-titulo">Mapa interactivo (núcleo) — React + Leaflet</div>
+            <div class="partida-desc">
+              Mapa tipo Google Maps con cartografía OpenStreetMap, marcadores diferenciados para
+              clientes y válvulas, ventanas de información con datos del cliente, contratos y
+              adeudos. Capacidad para cientos o miles de puntos.
+            </div>
+          </td>
+          <td>$9,500</td>
+        </tr>
+        <tr>
+          <td>4</td>
+          <td>
+            <div class="partida-titulo">Captura en campo (GPS + manual) e inteligencia de sectores</div>
+            <div class="partida-desc">
+              Captura automática por GPS del dispositivo y modo manual de precisión (estilo Uber).
+              <b>Detección automática del sector</b> al que pertenece cada ubicación mediante
+              algoritmo geométrico. Herramienta para dibujar y delimitar los 3 cuadrantes de la red.
+            </div>
+          </td>
+          <td>$6,800</td>
+        </tr>
+        <tr>
+          <td>5</td>
+          <td>
+            <div class="partida-titulo">Vista satélite, optimización móvil y experiencia de uso</div>
+            <div class="partida-desc">
+              Alternancia entre vista de calles y satélite de alta resolución, zoom ampliado,
+              memoria de posición inicial, vista panorámica de todos los puntos, diseño 100%
+              adaptable a celulares para uso de los instaladores en campo.
+            </div>
+          </td>
+          <td>$4,900</td>
+        </tr>
+        <tr>
+          <td>6</td>
+          <td>
+            <div class="partida-titulo">Control de acceso por roles — perfil "Instalador"</div>
+            <div class="partida-desc">
+              Integración del módulo al sistema de permisos existente para crear usuarios de campo
+              con acceso restringido únicamente al mapa, sin exponer información financiera.
+            </div>
+          </td>
+          <td>$2,400</td>
+        </tr>
+        <tr>
+          <td>7</td>
+          <td>
+            <div class="partida-titulo">Mejoras de seguridad en el acceso (login)</div>
+            <div class="partida-desc">
+              Validación inteligente de inicio de sesión que orienta al usuario cuando se equivoca
+              de portal (administrador/cliente) y corrección de un fallo de raíz en el manejo de
+              sesiones. Refuerzo de la protección contra accesos indebidos.
+            </div>
+          </td>
+          <td>$3,400</td>
+        </tr>
+        <tr>
+          <td>8</td>
+          <td>
+            <div class="partida-titulo">Pruebas, ajustes e implementación en producción</div>
+            <div class="partida-desc">
+              Pruebas en dispositivos reales, múltiples iteraciones de afinación, despliegue en el
+              servidor y verificación de funcionamiento end-to-end.
+            </div>
+          </td>
+          <td>$5,000</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- TOTALES -->
+    <div class="totales">
+      <div class="linea sub"><span>Subtotal</span><span>$43,000</span></div>
+      <div class="linea"><span>Descuento cliente local (−16%)</span><span>−$7,000</span></div>
+      <div class="total"><span>TOTAL</span><span>$36,000 MXN</span></div>
+      <div class="rango">Rango de inversión: <b>$28,000 – $40,000 MXN</b> según alcance final acordado</div>
+    </div>
+  </div>
+
+  <!-- ENTREGABLES -->
+  <div class="seccion" style="padding-top:0;">
+    <h2>Entregables incluidos</h2>
+    <ul class="lista">
+      <li>Módulo de mapa completo, funcionando e integrado al sistema actual</li>
+      <li>Cinco servicios web (API) documentados en el servidor</li>
+      <li>Base de datos georreferenciada lista para crecer a miles de registros</li>
+      <li>Captura de ubicaciones por GPS y manual desde cualquier celular Android</li>
+      <li>Detección automática de sectores y herramienta de delimitación de cuadrantes</li>
+      <li>Vista de mapa y satélite, con diseño adaptable a móvil</li>
+      <li>Perfil de usuario "Instalador" con permisos restringidos</li>
+      <li>Importador de ubicaciones desde Google Maps (preparado para activación)</li>
+      <li>Mejoras de seguridad en el inicio de sesión</li>
+    </ul>
+  </div>
+
+  <!-- OPCIONALES -->
+  <div class="seccion" style="padding-top:0;">
+    <h2>Servicios opcionales <span class="badge">No incluidos</span></h2>
+    <div class="opcional-grid">
+      <div class="opcional-card">
+        <h4>Activación de importación masiva (KML)</h4>
+        <div class="precio">$1,500 – $3,000</div>
+        <p>Ajuste e importación de las ubicaciones ya guardadas en Google Maps cuando estén exportadas.</p>
+      </div>
+      <div class="opcional-card">
+        <h4>Street View embebido</h4>
+        <div class="precio">$2,000 – $3,500</div>
+        <p>Integración de vista de calle dentro de la app. Requiere clave de Google Maps (costo aparte de Google).</p>
+      </div>
+      <div class="opcional-card">
+        <h4>Mantenimiento mensual</h4>
+        <div class="precio">$800 – $1,500 / mes</div>
+        <p>Respaldos, monitoreo, ajustes menores y soporte continuo del sistema.</p>
+      </div>
+      <div class="opcional-card">
+        <h4>Capacitación a instaladores</h4>
+        <div class="precio">$500 – $1,000 / sesión</div>
+        <p>Sesión práctica de uso del mapa y captura en campo para el personal.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- TERMINOS -->
+  <div class="seccion" style="padding-top:0;">
+    <h2>Términos y condiciones</h2>
+    <ul class="terminos">
+      <li>Forma de pago sugerida: 50% de anticipo para iniciar y 50% contra entrega.</li>
+      <li>Precios expresados en pesos mexicanos (MXN).</li>
+      <li>El hosting y dominio corren por cuenta del cliente (servicio ya contratado en GoDaddy).</li>
+      <li>Esta cotización ampara el módulo descrito; nuevas funciones se cotizan por separado.</li>
+      <li>Se incluyen 15 días de garantía por correcciones sobre lo entregado.</li>
+      <li>Cotización válida por 30 días naturales a partir de la fecha de emisión.</li>
+    </ul>
+  </div>
+
+  <!-- FIRMA -->
+  <div class="seccion" style="padding-top:0;">
+    <div class="firma">
+      <div class="linea-firma"></div>
+      <div style="font-weight:700; color:#0f3460;">Adrian Cortez</div>
+      <div style="font-size:.8rem; color:#64748b;">Desarrollador de Software</div>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <div class="footer">
+    <div>
+      <b>Adrian Cortez</b> — Desarrollo a la medida · Cloud · Integraciones con IA<br>
+      adriancortezv97@gmail.com · +52 729 542 6360
+    </div>
+    <div style="text-align:right; opacity:.7;">
+      © 2026<br>Todos los derechos reservados
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

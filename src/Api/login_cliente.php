@@ -56,6 +56,26 @@ if ($user) {
 }
 
 if (!$passwordOk) {
+    // ¿Las credenciales son válidas en el login de ADMINISTRADOR? (login equivocado)
+    $chk = $conn->prepare("
+        SELECT pass FROM user_admin WHERE usuario = ? AND status = 1 LIMIT 1
+    ");
+    $chk->bind_param("s", $usuario);
+    $chk->execute();
+    $otro = $chk->get_result()->fetch_assoc();
+    $chk->close();
+
+    if ($otro && (password_verify($pass, $otro['pass']) || md5($pass) === $otro['pass'])) {
+        // Credenciales correctas pero en el login equivocado — no es un fallo real
+        http_response_code(401);
+        echo json_encode([
+            "message"       => "Esta cuenta es de Administrador. Selecciona la pestaña \"Administrador\" para iniciar sesión.",
+            "code"          => "WRONG_LOGIN",
+            "tipo_correcto" => "admin"
+        ]);
+        exit;
+    }
+
     rl_registrarFallo($conn, $ip);
     http_response_code(401);
     echo json_encode(["message" => "Credenciales incorrectas"]);

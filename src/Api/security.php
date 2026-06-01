@@ -19,6 +19,7 @@ define('TABLAS_PERMITIDAS', [
     'clientes_login',
     'user_admin',
     'roles',
+    'ubicaciones',
 ]);
 
 /**
