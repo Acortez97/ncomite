@@ -36,5 +36,10 @@ export const API = {
   MAPA_GUARDAR_UBICACION:   "/api/mapa/guardar_ubicacion.php",
   MAPA_OBTENER_UBICACIONES: "/api/mapa/obtener_ubicaciones.php",
   MAPA_IMPORTAR_KML:        "/api/mapa/importar_kml.php",
+  MAPA_IMPORTAR_LOTE:       "/api/mapa/importar_lote.php",
+  MAPA_OBTENER_TRAZADO:     "/api/mapa/obtener_trazado.php",
+  MAPA_GUARDAR_TRAZADO:     "/api/mapa/guardar_trazado.php",
+  MAPA_REASIGNAR_SECTORES:  "/api/mapa/reasignar_sectores.php",
+  MAPA_ELIMINAR_ELEMENTO:   "/api/mapa/eliminar_elemento.php",
   MAPA_LIMPIAR:             "/api/mapa/limpiar_ubicaciones.php",
 };

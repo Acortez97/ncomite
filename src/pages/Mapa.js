@@ -1,12 +1,14 @@
 import React, { useEffect, useState, useRef, useCallback } from 'react';
 import {
-  MapContainer, TileLayer, Marker, Popup, Polygon, useMapEvents, useMap
+  MapContainer, TileLayer, Marker, Popup, Polygon, Polyline, useMapEvents, useMap
 } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { apiFetch } from '../Api/apiFetch';
 import { API } from '../Api/api.config';
 import NavMenu from '../components/NavMenu';
+import { parseKML } from './kmlParser';
+import Swal from 'sweetalert2';
 
 // ── Íconos leaflet con CRA ─────────────────────────────────────
 delete L.Icon.Default.prototype._getIconUrl;
@@ -40,14 +42,28 @@ const iconoValvula = new L.Icon({
   iconSize: [30, 44], iconAnchor: [15, 44], popupAnchor: [0, -44],
 });
 
-const iconoPrevio = new L.Icon({
-  iconUrl: 'data:image/svg+xml;base64,' + btoa(
-    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 36" width="24" height="36">' +
-    '<path d="M12 0C5.4 0 0 5.4 0 12c0 9 12 24 12 24s12-15 12-24C24 5.4 18.6 0 12 0z" fill="#7c3aed" opacity="0.85"/>' +
-    '<circle cx="12" cy="12" r="5" fill="white"/></svg>'
-  ),
-  iconSize: [24, 36], iconAnchor: [12, 36], popupAnchor: [0, -36],
+// Tubo (cuadrado naranja) y conexión T/Y (rombo morado) — marcadores pequeños
+const iconoTubo = L.divIcon({
+  className: '',
+  html: '<div style="width:14px;height:14px;background:#ea580c;border:2px solid white;border-radius:3px;box-shadow:0 1px 3px rgba(0,0,0,0.5)"></div>',
+  iconSize: [14, 14], iconAnchor: [7, 7], popupAnchor: [0, -8],
 });
+const iconoConexion = L.divIcon({
+  className: '',
+  html: '<div style="width:14px;height:14px;background:#7c3aed;border:2px solid white;transform:rotate(45deg);box-shadow:0 1px 3px rgba(0,0,0,0.5)"></div>',
+  iconSize: [14, 14], iconAnchor: [7, 7], popupAnchor: [0, -8],
+});
+
+function iconoPorTipo(tipo) {
+  if (tipo === 'valvula')  return iconoValvula;
+  if (tipo === 'tubo')     return iconoTubo;
+  if (tipo === 'conexion') return iconoConexion;
+  return iconoCliente;
+}
+
+const ETIQUETA_TIPO = {
+  cliente: 'Cliente', valvula: 'Válvula', tubo: 'Tubo', conexion: 'Conexión',
+};
 
 const SECTOR_COLORES = {
   1: { color: '#2563eb', fillColor: '#3b82f6', label: 'Sector 1' },
@@ -137,14 +153,16 @@ function GuardaPosicion({ onPosicion }) {
   return null;
 }
 
-// ── Clics solo para sectores ───────────────────────────────────
-function ManejadorClics({ sectoresEditando, onSector }) {
+// ── Clics para sectores o dibujo de tuberías ───────────────────
+function ManejadorClics({ sectoresEditando, onSector, dibujandoTuberia, onTuberia }) {
   const ref = useRef({});
-  ref.current = { sectoresEditando, onSector };
+  ref.current = { sectoresEditando, onSector, dibujandoTuberia, onTuberia };
   useMapEvents({
     click(e) {
-      const { sectoresEditando, onSector } = ref.current;
-      if (sectoresEditando) onSector([e.latlng.lat, e.latlng.lng]);
+      const r = ref.current;
+      const punto = [e.latlng.lat, e.latlng.lng];
+      if (r.sectoresEditando) { r.onSector(punto); return; }
+      if (r.dibujandoTuberia) { r.onTuberia(punto); }
     },
   });
   return null;
@@ -216,6 +234,7 @@ export default function Mapa() {
   const [coords, setCoords]             = useState(null);   // lat,lng seleccionadas
   const [sector, setSector]             = useState(1);
   const [tipo, setTipo]                 = useState('cliente');
+  const [formaConexion, setFormaConexion] = useState('T'); // T o Y
   const [notas, setNotas]               = useState('');
   const [guardando, setGuardando]       = useState(false);
   const [mensajeForm, setMensajeForm]   = useState('');
@@ -242,7 +261,37 @@ export default function Mapa() {
   const [sectorActivo, setSectorActivo]         = useState(1);
   const [sectoresCoords, setSectoresCoords]     = useState(cargarSectores);
 
+  // Edición de infraestructura / trazado
+  const [editItem, setEditItem] = useState(null); // { kind:'ubic'|'linea', id }
+  const [editForm, setEditForm] = useState({});
+  const [editGuardando, setEditGuardando] = useState(false);
+
+  // Dibujo manual de tuberías (líneas)
+  const [dibujandoTuberia, setDibujandoTuberia] = useState(false);
+  const [tuberiaCoords, setTuberiaCoords]       = useState([]);
+  const [tuberiaForm, setTuberiaForm]           = useState({ nombre: '', descripcion: '' });
+  const [guardandoTuberia, setGuardandoTuberia] = useState(false);
+
+  // Trazado (líneas de tubería) + importación KML
+  const [trazado, setTrazado]           = useState([]);
+  const [mostrarImport, setMostrarImport] = useState(false);
+  const [preview, setPreview]           = useState(null); // resultado del parseo
+  const [importando, setImportando]     = useState(false);
+  const [reporteImport, setReporteImport] = useState(null);
+  const fileInputRef = useRef(null);
+
   const buscarTimeout = useRef(null);
+
+  // ── Cargar trazado de la red ─────────────────────────────────
+  const cargarTrazado = useCallback(async () => {
+    try {
+      const res  = await apiFetch(API.MAPA_OBTENER_TRAZADO);
+      const json = await res.json();
+      if (!json.error) setTrazado(json.data || []);
+    } catch { /* trazado opcional */ }
+  }, []);
+
+  useEffect(() => { cargarTrazado(); }, [cargarTrazado]);
 
   // ── Cargar ubicaciones ───────────────────────────────────────
   const cargarUbicaciones = useCallback(async () => {
@@ -316,6 +365,7 @@ export default function Mapa() {
     setCoords(null);
     setNotas('');
     setTipo('cliente');
+    setFormaConexion('T');
     setSector(1);
     setVolarA(null);
     obtenerGPS();
@@ -347,13 +397,19 @@ export default function Mapa() {
 
   const sectoresListos   = haySectoresDefinidos(sectoresCoords);
   const necesitaContrato = tipo === 'cliente';
-  // Bloquear solo si no hay sectores. Si cae fuera permite guardar con selección manual.
-  const puedeGuardar = coords && (!necesitaContrato || contratoData) && sectoresListos;
+  // El sector es opcional: si no hay cuadrantes, se guarda sin sector y se asigna después.
+  const puedeGuardar = coords && (!necesitaContrato || contratoData);
 
   const guardarUbicacion = async () => {
     if (necesitaContrato && !contratoData) { setMensajeForm('Busca un contrato válido primero'); return; }
     if (!coords) { setMensajeForm(modoUbicacion === 'gps' ? 'Captura el GPS primero' : 'Toca el mapa para marcar la ubicación'); return; }
     setGuardando(true);
+    // Sector: detectado por geometría, o el manual si cae fuera, o null si no hay cuadrantes
+    const sectorFinal = sectoresListos ? (sectorDetectado || sector || null) : null;
+    // Para conexiones, anteponer la forma (T o Y) a la descripción
+    const notasFinal = tipo === 'conexion'
+      ? `${formaConexion}${notas ? ' — ' + notas : ''}`
+      : notas;
     try {
       const res  = await apiFetch(API.MAPA_GUARDAR_UBICACION, {
         method: 'POST',
@@ -361,7 +417,7 @@ export default function Mapa() {
         body: JSON.stringify({
           id_contrato: contratoData?.id_contrato ?? null,
           latitud: coords[0], longitud: coords[1],
-          tipo, sector, notas,
+          tipo, sector: sectorFinal, notas: notasFinal,
         }),
       });
       const json = await res.json();
@@ -393,15 +449,24 @@ export default function Mapa() {
 
   // ── Limpiar todos los registros del mapa ─────────────────────
   const limpiarTodo = async () => {
-    if (!window.confirm('¿Eliminar TODOS los clientes y válvulas del mapa? Esta acción no se puede deshacer.')) return;
+    const conf = await Swal.fire({
+      icon: 'warning',
+      title: '¿Eliminar todo el mapa?',
+      text: 'Se borrarán TODOS los clientes, válvulas e infraestructura. Esta acción no se puede deshacer.',
+      showCancelButton: true,
+      confirmButtonText: 'Sí, eliminar todo',
+      cancelButtonText: 'Cancelar',
+      confirmButtonColor: '#dc2626',
+    });
+    if (!conf.isConfirmed) return;
     try {
       const res  = await apiFetch(API.MAPA_LIMPIAR, { method: 'DELETE' });
       const json = await res.json();
       if (json.error) throw new Error(json.message);
-      alert(`Listo — ${json.eliminados} registros eliminados.`);
+      Swal.fire('Listo', `${json.eliminados} registros eliminados.`, 'success');
       cargarUbicaciones();
     } catch (e) {
-      alert('Error: ' + e.message);
+      Swal.fire('Error', e.message, 'error');
     }
   };
 
@@ -411,6 +476,238 @@ export default function Mapa() {
       localStorage.setItem(STORAGE_SECTORES, JSON.stringify(n));
       return n;
     });
+  };
+
+  // ── Editar infraestructura / trazado ─────────────────────────
+  const abrirEdicionUbic = (ub) => {
+    setEditItem({ kind: 'ubic', id: ub.id });
+    setEditForm({ tipo: ub.tipo, sector: ub.sector || '', notas: ub.notas || '' });
+  };
+  const abrirEdicionLinea = (t) => {
+    setEditItem({ kind: 'linea', id: t.id });
+    setEditForm({ nombre: t.nombre, descripcion: t.descripcion || '', sector: t.sector || '' });
+  };
+
+  const guardarEdicion = async () => {
+    if (!editItem) return;
+    setEditGuardando(true);
+    const esUbic = editItem.kind === 'ubic';
+    const updates = esUbic
+      ? { tipo: editForm.tipo, sector: editForm.sector || null, notas: editForm.notas }
+      : { nombre: editForm.nombre, descripcion: editForm.descripcion, sector: editForm.sector || null };
+    try {
+      const res = await apiFetch(API.UPDATE, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          table: esUbic ? 'ubicaciones' : 'trazado_red',
+          updates,
+          idField: 'id',
+          idValue: editItem.id,
+        }),
+      });
+      const json = await res.json();
+      if (json.error) throw new Error(json.error);
+      Swal.fire({ icon: 'success', title: 'Actualizado', timer: 1100, showConfirmButton: false });
+      setEditItem(null);
+      esUbic ? cargarUbicaciones() : cargarTrazado();
+    } catch (e) {
+      Swal.fire('Error', e.message || 'No se pudo actualizar', 'error');
+    } finally {
+      setEditGuardando(false);
+    }
+  };
+
+  // ── Eliminar un elemento individual ──────────────────────────
+  const eliminarElemento = async (tabla, id, etiqueta) => {
+    const conf = await Swal.fire({
+      icon: 'warning',
+      title: `¿Eliminar ${etiqueta}?`,
+      text: 'Esta acción no se puede deshacer.',
+      showCancelButton: true,
+      confirmButtonText: 'Sí, eliminar',
+      cancelButtonText: 'Cancelar',
+      confirmButtonColor: '#dc2626',
+    });
+    if (!conf.isConfirmed) return;
+    try {
+      const res = await apiFetch(API.MAPA_ELIMINAR_ELEMENTO, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ tabla, id }),
+      });
+      const json = await res.json();
+      if (json.error) throw new Error(json.message);
+      Swal.fire({ icon: 'success', title: 'Eliminado', timer: 1100, showConfirmButton: false });
+      if (tabla === 'ubicaciones') cargarUbicaciones(); else cargarTrazado();
+    } catch (e) {
+      Swal.fire('Error', e.message, 'error');
+    }
+  };
+
+  // ── Reasignar sectores a lo ya importado según los cuadrantes ─
+  const reasignarSectores = async () => {
+    if (!haySectoresDefinidos(sectoresCoords)) {
+      Swal.fire('Faltan cuadrantes', 'Primero dibuja al menos un cuadrante en el mapa.', 'warning');
+      return;
+    }
+    const ubics = ubicaciones.map(ub => ({
+      id: ub.id,
+      sector: detectarSector([parseFloat(ub.latitud), parseFloat(ub.longitud)], sectoresCoords),
+    }));
+    const lins = trazado.map(t => ({
+      id: t.id,
+      sector: t.coordenadas?.length ? detectarSector(t.coordenadas[0], sectoresCoords) : null,
+    }));
+    const asignados = ubics.filter(u => u.sector).length;
+    const conf = await Swal.fire({
+      icon: 'question',
+      title: 'Asignar cuadrantes',
+      html: `Se asignará el cuadrante a <b>${asignados}</b> de ${ubics.length} ubicaciones según dónde caen en el mapa.`,
+      showCancelButton: true,
+      confirmButtonText: 'Asignar',
+      cancelButtonText: 'Cancelar',
+      confirmButtonColor: '#2563eb',
+    });
+    if (!conf.isConfirmed) return;
+    try {
+      const res  = await apiFetch(API.MAPA_REASIGNAR_SECTORES, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ubicaciones: ubics, lineas: lins }),
+      });
+      const json = await res.json();
+      if (json.error) throw new Error(json.message);
+      Swal.fire('Listo', `${json.ubicaciones_actualizadas} ubicaciones y ${json.lineas_actualizadas} líneas actualizadas.`, 'success');
+      cargarUbicaciones();
+      cargarTrazado();
+    } catch (e) {
+      Swal.fire('Error', e.message, 'error');
+    }
+  };
+
+  // ── Dibujo manual de tuberías ────────────────────────────────
+  const iniciarTuberia = () => {
+    setDibujandoTuberia(true);
+    setTuberiaCoords([]);
+    setTuberiaForm({ nombre: '', descripcion: '' });
+    // cerrar otros modos
+    setSectoresEditando(false);
+    setMostrarForm(false);
+  };
+  const agregarPuntoTuberia = (punto) => setTuberiaCoords(prev => [...prev, punto]);
+  const deshacerPuntoTuberia = () => setTuberiaCoords(prev => prev.slice(0, -1));
+  const cancelarTuberia = () => { setDibujandoTuberia(false); setTuberiaCoords([]); };
+
+  const guardarTuberia = async () => {
+    if (tuberiaCoords.length < 2) {
+      Swal.fire('Faltan puntos', 'Marca al menos 2 puntos en el mapa para trazar la tubería.', 'warning');
+      return;
+    }
+    if (!tuberiaForm.nombre.trim()) {
+      Swal.fire('Falta el nombre', 'Escribe un nombre para la tubería (ej: Ramal 6 calle X).', 'warning');
+      return;
+    }
+    setGuardandoTuberia(true);
+    const sector = detectarSector(tuberiaCoords[0], sectoresCoords);
+    try {
+      const res = await apiFetch(API.MAPA_GUARDAR_TRAZADO, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          nombre: tuberiaForm.nombre.trim(),
+          descripcion: tuberiaForm.descripcion.trim(),
+          sector,
+          coordenadas: tuberiaCoords,
+        }),
+      });
+      const json = await res.json();
+      if (json.error) throw new Error(json.message);
+      Swal.fire({ icon: 'success', title: 'Tubería guardada', timer: 1200, showConfirmButton: false });
+      setDibujandoTuberia(false);
+      setTuberiaCoords([]);
+      cargarTrazado();
+    } catch (e) {
+      Swal.fire('Error', e.message, 'error');
+    } finally {
+      setGuardandoTuberia(false);
+    }
+  };
+
+  const borrarTodosCuadrantes = async () => {
+    const conf = await Swal.fire({
+      icon: 'warning',
+      title: '¿Borrar los cuadrantes?',
+      text: 'Se borrarán los 3 cuadrantes completos. Tendrás que volver a dibujarlos.',
+      showCancelButton: true,
+      confirmButtonText: 'Sí, borrar',
+      cancelButtonText: 'Cancelar',
+      confirmButtonColor: '#dc2626',
+    });
+    if (!conf.isConfirmed) return;
+    const vacio = { 1: [], 2: [], 3: [] };
+    localStorage.setItem(STORAGE_SECTORES, JSON.stringify(vacio));
+    setSectoresCoords(vacio);
+    Swal.fire({ icon: 'success', title: 'Cuadrantes borrados', timer: 1200, showConfirmButton: false });
+  };
+
+  // ── Importación KML ──────────────────────────────────────────
+  const onArchivoKML = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setReporteImport(null);
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      try {
+        const parsed = parseKML(ev.target.result);
+        // Detectar sector por geometría con los polígonos definidos
+        parsed.puntos.forEach(p => { p.sector = detectarSector([p.lat, p.lng], sectoresCoords); });
+        parsed.lineas.forEach(l => {
+          // sector de la línea = sector de su primer punto
+          l.sector = l.coordenadas.length ? detectarSector(l.coordenadas[0], sectoresCoords) : null;
+        });
+        // Conteos para el preview
+        const conteo = { cliente: 0, valvula: 0, tubo: 0, conexion: 0, sinSector: 0 };
+        parsed.puntos.forEach(p => {
+          conteo[p.tipo] = (conteo[p.tipo] || 0) + 1;
+          if (!p.sector) conteo.sinSector++;
+        });
+        setPreview({ ...parsed, conteo });
+      } catch {
+        Swal.fire('Error', 'No se pudo leer el archivo KML. Verifica que sea un archivo válido.', 'error');
+      }
+    };
+    reader.readAsText(file);
+  };
+
+  const ejecutarImportacion = async () => {
+    if (!preview) return;
+    setImportando(true);
+    try {
+      const ubicaciones = preview.puntos.map(p => ({
+        tipo: p.tipo, num_contrato: p.num_contrato,
+        lat: p.lat, lng: p.lng, sector: p.sector, notas: p.notas,
+      }));
+      const lineas = preview.lineas.map(l => ({
+        nombre: l.nombre, descripcion: l.descripcion,
+        sector: l.sector, coordenadas: l.coordenadas,
+      }));
+      const res  = await apiFetch(API.MAPA_IMPORTAR_LOTE, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ubicaciones, lineas }),
+      });
+      const json = await res.json();
+      if (json.error) throw new Error(json.message);
+      setReporteImport(json);
+      setPreview(null);
+      cargarUbicaciones();
+      cargarTrazado();
+    } catch (e) {
+      Swal.fire('Error', 'Error al importar: ' + e.message, 'error');
+    } finally {
+      setImportando(false);
+    }
   };
 
   // ── Render ────────────────────────────────────────────────────
@@ -438,6 +735,8 @@ export default function Mapa() {
             <option value="">Todo</option>
             <option value="cliente">Clientes</option>
             <option value="valvula">Válvulas</option>
+            <option value="tubo">Tubos</option>
+            <option value="conexion">Conexiones</option>
           </select>
           <button onClick={abrirFormulario} style={estiloBotonPrimario}>+ Registrar</button>
           <button
@@ -464,6 +763,20 @@ export default function Mapa() {
             style={{ ...estiloBotonPrimario, background: capa === 'satelite' ? '#0369a1' : '#475569' }}>
             {capa === 'satelite' ? 'Mapa' : 'Satelite'}
           </button>
+          <button onClick={dibujandoTuberia ? cancelarTuberia : iniciarTuberia}
+            style={{ ...estiloBotonPrimario, background: dibujandoTuberia ? '#dc2626' : '#0891b2' }}>
+            {dibujandoTuberia ? '✕ Cancelar tubería' : '〰 Dibujar tubería'}
+          </button>
+          <button onClick={() => { setMostrarImport(true); setPreview(null); setReporteImport(null); }}
+            style={{ ...estiloBotonPrimario, background: '#7c3aed' }}>
+            ⬆ Importar KML
+          </button>
+          {sectoresListos && ubicaciones.length > 0 && (
+            <button onClick={reasignarSectores}
+              style={{ ...estiloBotonPrimario, background: '#0d9488' }}>
+              ⬡ Asignar cuadrantes
+            </button>
+          )}
           <button onClick={limpiarTodo}
             style={{ ...estiloBotonPrimario, background: '#dc2626' }}>
             Limpiar todo
@@ -489,7 +802,32 @@ export default function Mapa() {
           ))}
           <button onClick={deshacerPunto} style={estiloBotonUndo}>↩ Deshacer</button>
           <button onClick={() => limpiarSector(sectorActivo)} style={estiloBotonUndo}>🗑 Limpiar S{sectorActivo}</button>
+          <button onClick={borrarTodosCuadrantes}
+            style={{ ...estiloBotonUndo, background: '#dc2626', borderColor: '#dc2626' }}>
+            🗑 Borrar todos
+          </button>
           <span style={{ color: '#93c5fd', fontSize: 11 }}>Se guarda automáticamente</span>
+        </div>
+      )}
+
+      {/* Panel dibujo de tubería */}
+      {dibujandoTuberia && (
+        <div style={{
+          background: '#0e7490', color: 'white', padding: '8px 16px',
+          display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', fontSize: 13,
+        }}>
+          <span style={{ fontWeight: 600 }}>Clic en el mapa para trazar la tubería ({tuberiaCoords.length} pts):</span>
+          <input type="text" placeholder="Nombre (ej: Ramal 6)" value={tuberiaForm.nombre}
+            onChange={e => setTuberiaForm(f => ({ ...f, nombre: e.target.value }))}
+            style={{ padding: '4px 8px', borderRadius: 6, border: 'none', fontSize: 13, width: 150 }} />
+          <input type="text" placeholder="Descripción (ej: Tubo 2&quot;)" value={tuberiaForm.descripcion}
+            onChange={e => setTuberiaForm(f => ({ ...f, descripcion: e.target.value }))}
+            style={{ padding: '4px 8px', borderRadius: 6, border: 'none', fontSize: 13, width: 160 }} />
+          <button onClick={deshacerPuntoTuberia} style={estiloBotonUndo}>↩ Deshacer</button>
+          <button onClick={guardarTuberia} disabled={guardandoTuberia}
+            style={{ ...estiloBotonPrimario, background: '#16a34a', opacity: guardandoTuberia ? 0.6 : 1 }}>
+            {guardandoTuberia ? 'Guardando...' : '✓ Guardar tubería'}
+          </button>
         </div>
       )}
 
@@ -513,6 +851,15 @@ export default function Mapa() {
         </span>
         <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
           <span style={{ width: 10, height: 10, borderRadius: '50%', background: '#dc2626', display: 'inline-block' }} /> Válvula
+        </span>
+        <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+          <span style={{ width: 10, height: 10, borderRadius: 2, background: '#ea580c', display: 'inline-block' }} /> Tubo
+        </span>
+        <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+          <span style={{ width: 10, height: 10, background: '#7c3aed', display: 'inline-block', transform: 'rotate(45deg)' }} /> Conexión
+        </span>
+        <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+          <span style={{ width: 14, height: 3, background: '#0891b2', display: 'inline-block' }} /> Tubería
         </span>
         {!cargando && (
           <span style={{ marginLeft: 'auto', color: '#64748b' }}>
@@ -590,7 +937,23 @@ export default function Mapa() {
           <ManejadorClics
             sectoresEditando={sectoresEditando}
             onSector={agregarPuntoSector}
+            dibujandoTuberia={dibujandoTuberia}
+            onTuberia={agregarPuntoTuberia}
           />
+
+          {/* Tubería en construcción */}
+          {dibujandoTuberia && tuberiaCoords.length > 0 && (
+            <>
+              <Polyline positions={tuberiaCoords}
+                pathOptions={{ color: '#0891b2', weight: 4, dashArray: '8 6' }} />
+              {tuberiaCoords.map((p, i) => (
+                <Marker key={`tb-${i}`} position={p}
+                  icon={L.divIcon({ className: '',
+                    html: '<div style="width:9px;height:9px;background:#0891b2;border:2px solid white;border-radius:50%;box-shadow:0 1px 3px rgba(0,0,0,0.5)"></div>',
+                    iconSize: [9, 9], iconAnchor: [4, 4] })} />
+              ))}
+            </>
+          )}
 
           {/* Sigue el centro del mapa en modo manual */}
           {mostrarForm && modoUbicacion === 'manual' && (
@@ -609,6 +972,32 @@ export default function Mapa() {
               </Polygon>
             );
           })}
+
+          {/* Trazado de la red (tuberías) */}
+          {trazado.map(t => (
+            <Polyline key={`t-${t.id}`} positions={t.coordenadas}
+              pathOptions={{ color: '#0891b2', weight: 3, opacity: 0.7 }}>
+              <Popup>
+                <div style={{ fontSize: 13 }}>
+                  <b style={{ color: '#0891b2' }}>{t.nombre}</b>
+                  {t.descripcion && <div style={{ color: '#64748b', fontSize: 12 }}>{t.descripcion}</div>}
+                  <div><b>Sector:</b> {t.sector ? SECTOR_COLORES[t.sector]?.label : 'Sin asignar'}</div>
+                  <div style={{ marginTop: 8, display: 'flex', gap: 6 }}>
+                    <button onClick={() => abrirEdicionLinea(t)}
+                      style={{ background: '#2563eb', color: 'white', border: 'none',
+                        borderRadius: 6, padding: '5px 12px', fontSize: 12, cursor: 'pointer', fontWeight: 600 }}>
+                      ✎ Editar
+                    </button>
+                    <button onClick={() => eliminarElemento('trazado_red', t.id, 'esta tubería')}
+                      style={{ background: '#dc2626', color: 'white', border: 'none',
+                        borderRadius: 6, padding: '5px 12px', fontSize: 12, cursor: 'pointer', fontWeight: 600 }}>
+                      🗑 Eliminar
+                    </button>
+                  </div>
+                </div>
+              </Popup>
+            </Polyline>
+          ))}
 
           {/* Vértices en modo edición */}
           {sectoresEditando && (sectoresCoords[sectorActivo] || []).map((p, i) => (
@@ -629,18 +1018,10 @@ export default function Mapa() {
           {ubicaciones.map(ub => (
             <Marker key={ub.id}
               position={[parseFloat(ub.latitud), parseFloat(ub.longitud)]}
-              icon={ub.tipo === 'valvula' ? iconoValvula : iconoCliente}
+              icon={iconoPorTipo(ub.tipo)}
             >
               <Popup maxWidth={260}>
-                {ub.tipo === 'valvula' ? (
-                  <div style={{ fontSize: 13, lineHeight: 1.7 }}>
-                    <div style={{ fontWeight: 700, fontSize: 14, color: '#dc2626', marginBottom: 4 }}>
-                      Valvula de Paso
-                    </div>
-                    <div><b>Sector:</b> {SECTOR_COLORES[ub.sector]?.label}</div>
-                    {ub.notas && <div><b>Descripcion:</b> {ub.notas}</div>}
-                  </div>
-                ) : (
+                {ub.tipo === 'cliente' ? (
                   <div style={{ fontSize: 13, lineHeight: 1.6 }}>
                     <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 4 }}>
                       {ub.Nombre} {ub.Apellido_pat} {ub.Apellido_mat}
@@ -648,13 +1029,38 @@ export default function Mapa() {
                     <div><b>Contrato:</b> {ub.num_contrato}</div>
                     <div><b>Domicilio:</b> {ub.domicilio || '—'}</div>
                     <div><b>Telefono:</b> {ub.num_celular || '—'}</div>
-                    <div><b>Sector:</b> {SECTOR_COLORES[ub.sector]?.label}</div>
+                    <div><b>Sector:</b> {ub.sector ? SECTOR_COLORES[ub.sector]?.label : 'Sin asignar'}</div>
                     {parseInt(ub.anios_deuda) > 0 && (
                       <div style={{ marginTop: 6, background: '#fee2e2', borderRadius: 4, padding: '4px 8px' }}>
                         <b>Adeudos pendientes:</b> {ub.anios_deuda} año{ub.anios_deuda !== 1 ? 's' : ''}
                       </div>
                     )}
                     {ub.notas && <div style={{ marginTop: 4, color: '#64748b', fontSize: 12 }}>{ub.notas}</div>}
+                    <button onClick={() => eliminarElemento('ubicaciones', ub.id, 'esta toma de cliente')}
+                      style={{ marginTop: 8, background: '#dc2626', color: 'white', border: 'none',
+                        borderRadius: 6, padding: '5px 12px', fontSize: 12, cursor: 'pointer', fontWeight: 600 }}>
+                      🗑 Eliminar
+                    </button>
+                  </div>
+                ) : (
+                  <div style={{ fontSize: 13, lineHeight: 1.7 }}>
+                    <div style={{ fontWeight: 700, fontSize: 14, color: '#dc2626', marginBottom: 4 }}>
+                      {ETIQUETA_TIPO[ub.tipo] || 'Infraestructura'}
+                    </div>
+                    <div><b>Sector:</b> {ub.sector ? SECTOR_COLORES[ub.sector]?.label : 'Sin asignar'}</div>
+                    {ub.notas && <div><b>Descripcion:</b> {ub.notas}</div>}
+                    <div style={{ marginTop: 8, display: 'flex', gap: 6 }}>
+                      <button onClick={() => abrirEdicionUbic(ub)}
+                        style={{ background: '#2563eb', color: 'white', border: 'none',
+                          borderRadius: 6, padding: '5px 12px', fontSize: 12, cursor: 'pointer', fontWeight: 600 }}>
+                        ✎ Editar
+                      </button>
+                      <button onClick={() => eliminarElemento('ubicaciones', ub.id, ETIQUETA_TIPO[ub.tipo] || 'este elemento')}
+                        style={{ background: '#dc2626', color: 'white', border: 'none',
+                          borderRadius: 6, padding: '5px 12px', fontSize: 12, cursor: 'pointer', fontWeight: 600 }}>
+                        🗑 Eliminar
+                      </button>
+                    </div>
                   </div>
                 )}
               </Popup>
@@ -762,10 +1168,10 @@ export default function Mapa() {
             </div>
 
             {/* Contrato — solo requerido para clientes */}
-            {tipo === 'valvula' ? (
+            {tipo !== 'cliente' ? (
               <div style={{ background: '#f0f9ff', border: '1px solid #bae6fd', borderRadius: 8,
                 padding: '8px 12px', marginBottom: 12, fontSize: 13, color: '#0369a1' }}>
-                Las válvulas no requieren contrato asociado.
+                {ETIQUETA_TIPO[tipo]} no requiere contrato asociado.
               </div>
             ) : (
               <>
@@ -794,14 +1200,6 @@ export default function Mapa() {
               </>
             )}
 
-            {/* Alerta si no hay sectores definidos */}
-            {!sectoresListos && (
-              <div style={{ background: '#fef3c7', border: '1px solid #fbbf24',
-                borderRadius: 8, padding: '8px 12px', marginBottom: 10, fontSize: 13, color: '#92400e' }}>
-                Define los sectores primero (boton "Sectores" en el mapa).
-              </div>
-            )}
-
             {/* Sector — detectado automáticamente */}
             <div style={{ display: 'flex', gap: 8, marginBottom: 10 }}>
               <div style={{ flex: 1 }}>
@@ -819,7 +1217,12 @@ export default function Mapa() {
                     display: 'flex', alignItems: 'center' }}>
                     {SECTOR_COLORES[sectorDetectado]?.label}
                   </div>
-                ) : coords && sectoresListos ? (
+                ) : !sectoresListos ? (
+                  <div style={{ ...estiloInput, marginBottom: 0, color: '#92400e', background: '#fffbeb',
+                    border: '1px solid #fde68a', fontSize: 12, display: 'flex', alignItems: 'center' }}>
+                    Sin asignar (defínelo después)
+                  </div>
+                ) : coords ? (
                   <>
                     <div style={{ background: '#fee2e2', border: '1px solid #fca5a5',
                       borderRadius: 6, padding: '6px 10px', fontSize: 12, color: '#b91c1c', marginBottom: 6 }}>
@@ -842,16 +1245,39 @@ export default function Mapa() {
                 <select value={tipo} onChange={e => setTipo(e.target.value)} style={estiloInput}>
                   <option value="cliente">Cliente</option>
                   <option value="valvula">Válvula</option>
+                  <option value="tubo">Tubo</option>
+                  <option value="conexion">Conexión (T/Y)</option>
                 </select>
               </div>
             </div>
 
+            {/* Forma de conexión (T o Y) — solo para conexiones */}
+            {tipo === 'conexion' && (
+              <>
+                <label style={estiloLabel}>Forma de la conexión</label>
+                <div style={{ display: 'flex', gap: 8, marginBottom: 10 }}>
+                  {['T', 'Y'].map(f => (
+                    <button key={f} type="button" onClick={() => setFormaConexion(f)}
+                      style={{
+                        flex: 1, padding: '10px 0', borderRadius: 8, cursor: 'pointer',
+                        fontSize: 18, fontWeight: 800,
+                        border: formaConexion === f ? '2px solid #7c3aed' : '1px solid #d1d5db',
+                        background: formaConexion === f ? '#f5f3ff' : 'white',
+                        color: formaConexion === f ? '#7c3aed' : '#64748b',
+                      }}>
+                      {f}
+                    </button>
+                  ))}
+                </div>
+              </>
+            )}
+
             {/* Notas / Descripción */}
             <label style={estiloLabel}>
-              {tipo === 'valvula' ? 'Descripcion (cierre, ramal, diametro...)' : 'Notas (opcional)'}
+              {tipo !== 'cliente' ? 'Descripcion (medida, calle, referencia...)' : 'Notas (opcional)'}
             </label>
             <input type="text"
-              placeholder={tipo === 'valvula' ? 'Ej: Cierre calle Morelos, 2 pulgadas' : 'Observaciones...'}
+              placeholder={tipo !== 'cliente' ? 'Ej: 2 pulgadas, calle Durango' : 'Observaciones...'}
               value={notas}
               onChange={e => setNotas(e.target.value)} style={{ ...estiloInput, marginBottom: 12 }} />
 
@@ -874,10 +1300,185 @@ export default function Mapa() {
               }}
             >
               {guardando ? 'Guardando...'
-                : !sectoresListos ? 'Define los sectores primero'
                 : !coords ? 'Obtén la ubicación primero'
+                : necesitaContrato && !contratoData ? 'Busca el contrato primero'
                 : 'Guardar Ubicación'}
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de edición de infraestructura / trazado */}
+      {editItem && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 3000,
+          display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
+          <div style={{ background: 'white', borderRadius: 12, padding: 24, width: '100%', maxWidth: 400 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
+              <h3 style={{ margin: 0, color: '#1e40af' }}>
+                {editItem.kind === 'ubic' ? 'Editar infraestructura' : 'Editar tubería'}
+              </h3>
+              <button onClick={() => setEditItem(null)}
+                style={{ background: 'none', border: 'none', fontSize: 20, cursor: 'pointer', color: '#64748b' }}>✕</button>
+            </div>
+
+            {editItem.kind === 'ubic' ? (
+              <>
+                <label style={estiloLabel}>Tipo</label>
+                <select value={editForm.tipo} onChange={e => setEditForm(f => ({ ...f, tipo: e.target.value }))} style={estiloInput}>
+                  <option value="valvula">Válvula</option>
+                  <option value="tubo">Tubo</option>
+                  <option value="conexion">Conexión (T/Y)</option>
+                  <option value="cliente">Cliente</option>
+                </select>
+                <label style={estiloLabel}>Descripción</label>
+                <input type="text" value={editForm.notas}
+                  onChange={e => setEditForm(f => ({ ...f, notas: e.target.value }))}
+                  placeholder="Medida, calle, referencia..." style={estiloInput} />
+              </>
+            ) : (
+              <>
+                <label style={estiloLabel}>Nombre</label>
+                <input type="text" value={editForm.nombre}
+                  onChange={e => setEditForm(f => ({ ...f, nombre: e.target.value }))} style={estiloInput} />
+                <label style={estiloLabel}>Descripción</label>
+                <input type="text" value={editForm.descripcion}
+                  onChange={e => setEditForm(f => ({ ...f, descripcion: e.target.value }))}
+                  placeholder="Ej: Tubo 2 pulgadas" style={estiloInput} />
+              </>
+            )}
+
+            <label style={estiloLabel}>Sector</label>
+            <select value={editForm.sector} onChange={e => setEditForm(f => ({ ...f, sector: e.target.value }))} style={estiloInput}>
+              <option value="">Sin asignar</option>
+              <option value="1">Sector 1</option>
+              <option value="2">Sector 2</option>
+              <option value="3">Sector 3</option>
+            </select>
+
+            <button onClick={guardarEdicion} disabled={editGuardando}
+              style={{ ...estiloBotonPrimario, width: '100%', marginTop: 12, padding: '12px 0',
+                opacity: editGuardando ? 0.6 : 1 }}>
+              {editGuardando ? 'Guardando...' : 'Guardar cambios'}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de importación KML */}
+      {mostrarImport && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 3000,
+          display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
+          <div style={{ background: 'white', borderRadius: 12, padding: 24, width: '100%',
+            maxWidth: 480, maxHeight: '90vh', overflowY: 'auto', boxShadow: '0 20px 60px rgba(0,0,0,0.3)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
+              <h3 style={{ margin: 0, color: '#7c3aed' }}>Importar mapa de Google (KML)</h3>
+              <button onClick={() => setMostrarImport(false)}
+                style={{ background: 'none', border: 'none', fontSize: 20, cursor: 'pointer', color: '#64748b' }}>✕</button>
+            </div>
+
+            {/* Aviso sectores */}
+            {!sectoresListos && (
+              <div style={{ background: '#fef3c7', border: '1px solid #fbbf24', borderRadius: 8,
+                padding: '8px 12px', marginBottom: 12, fontSize: 13, color: '#92400e' }}>
+                ⚠️ No has definido los cuadrantes. Las ubicaciones se importarán sin sector.
+                Dibuja los sectores primero si quieres asignación automática.
+              </div>
+            )}
+
+            {/* Reporte final */}
+            {reporteImport ? (
+              <div>
+                <div style={{ background: '#f0fdf4', border: '1px solid #86efac', borderRadius: 8,
+                  padding: 14, fontSize: 14, marginBottom: 12 }}>
+                  <div style={{ fontWeight: 700, color: '#166534', marginBottom: 6 }}>✓ Importación completada</div>
+                  <div>Clientes importados: <b>{reporteImport.clientes_importados}</b></div>
+                  <div>Infraestructura: <b>{reporteImport.infra_importada}</b></div>
+                  <div>Líneas de trazado: <b>{reporteImport.lineas_importadas}</b></div>
+                </div>
+                {reporteImport.total_sin_contrato > 0 && (
+                  <div style={{ background: '#fef2f2', border: '1px solid #fca5a5', borderRadius: 8,
+                    padding: 12, fontSize: 13, marginBottom: 12 }}>
+                    <div style={{ fontWeight: 700, color: '#b91c1c', marginBottom: 4 }}>
+                      {reporteImport.total_sin_contrato} clientes sin contrato en la BD
+                    </div>
+                    <div style={{ color: '#7f1d1d', fontSize: 12, marginBottom: 6 }}>
+                      Estos números no existen aún en el sistema. Captura los contratos y vuelve a importar:
+                    </div>
+                    <div style={{ maxHeight: 120, overflowY: 'auto', fontSize: 12, fontFamily: 'monospace' }}>
+                      {reporteImport.sin_contrato.map((s, i) => (
+                        <div key={i}>• {s.num_contrato || s.nombre}</div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                <button onClick={() => setMostrarImport(false)}
+                  style={{ ...estiloBotonPrimario, width: '100%', padding: '12px 0' }}>
+                  Cerrar
+                </button>
+              </div>
+            ) : preview ? (
+              /* Preview antes de confirmar */
+              <div>
+                <p style={{ fontSize: 13, color: '#475569', marginBottom: 12 }}>
+                  Se detectaron estos elementos en el archivo. Revisa y confirma:
+                </p>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 12 }}>
+                  {[
+                    ['Clientes', preview.conteo.cliente, '#2563eb'],
+                    ['Válvulas', preview.conteo.valvula, '#dc2626'],
+                    ['Tubos', preview.conteo.tubo, '#ea580c'],
+                    ['Conexiones', preview.conteo.conexion, '#7c3aed'],
+                    ['Líneas de red', preview.lineas.length, '#0891b2'],
+                    ['Para revisión', preview.revision.length, '#92400e'],
+                  ].map(([lbl, n, col]) => (
+                    <div key={lbl} style={{ border: `1px solid ${col}33`, background: `${col}11`,
+                      borderRadius: 8, padding: '8px 12px' }}>
+                      <div style={{ fontSize: 20, fontWeight: 800, color: col }}>{n}</div>
+                      <div style={{ fontSize: 12, color: '#475569' }}>{lbl}</div>
+                    </div>
+                  ))}
+                </div>
+                {preview.conteo.sinSector > 0 && (
+                  <div style={{ background: '#fef9c3', borderRadius: 6, padding: '6px 10px',
+                    fontSize: 12, color: '#713f12', marginBottom: 12 }}>
+                    {preview.conteo.sinSector} ubicaciones quedaron sin cuadrante (fuera de los polígonos definidos).
+                  </div>
+                )}
+                {preview.ignorados > 0 && (
+                  <div style={{ fontSize: 12, color: '#94a3b8', marginBottom: 12 }}>
+                    {preview.ignorados} elementos ignorados (puntos de trazado, rótulos, rutas).
+                  </div>
+                )}
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <button onClick={() => setPreview(null)}
+                    style={{ flex: 1, background: '#f1f5f9', color: '#475569', border: '1px solid #cbd5e1',
+                      borderRadius: 6, padding: '12px 0', cursor: 'pointer', fontWeight: 600 }}>
+                    Elegir otro
+                  </button>
+                  <button onClick={ejecutarImportacion} disabled={importando}
+                    style={{ ...estiloBotonPrimario, flex: 2, padding: '12px 0', background: '#7c3aed',
+                      opacity: importando ? 0.6 : 1 }}>
+                    {importando ? 'Importando...' : 'Confirmar e importar'}
+                  </button>
+                </div>
+              </div>
+            ) : (
+              /* Selección de archivo */
+              <div>
+                <p style={{ fontSize: 13, color: '#475569', marginBottom: 16 }}>
+                  Selecciona el archivo <b>.kml</b> exportado de Google My Maps. El sistema
+                  clasificará automáticamente clientes, válvulas, tubos y conexiones, y detectará
+                  el cuadrante de cada uno según los sectores que hayas dibujado.
+                </p>
+                <input ref={fileInputRef} type="file" accept=".kml,.xml"
+                  onChange={onArchivoKML}
+                  style={{ display: 'none' }} />
+                <button onClick={() => fileInputRef.current?.click()}
+                  style={{ ...estiloBotonPrimario, width: '100%', padding: '14px 0', background: '#7c3aed' }}>
+                  📁 Seleccionar archivo KML
+                </button>
+              </div>
+            )}
           </div>
         </div>
       )}
@@ -913,10 +1514,11 @@ const estiloManualPanel = {
   borderRadius: '16px 16px 0 0',
   padding: '14px 16px 28px',
   width: '100%', maxWidth: 500,
-  maxHeight: '60vh',
+  maxHeight: '85vh',
   overflowY: 'auto',
   boxShadow: '0 -6px 30px rgba(0,0,0,0.25)',
   pointerEvents: 'auto',
+  WebkitOverflowScrolling: 'touch',
 };
 const estiloLabel = {
   display: 'block', fontSize: 12, fontWeight: 600, color: '#374151', marginBottom: 4,

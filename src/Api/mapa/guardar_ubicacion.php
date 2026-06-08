@@ -12,7 +12,8 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 $session    = verificarToken($conn);
 $input      = json_decode(file_get_contents("php://input"), true);
 $tipo       = $input['tipo']   ?? 'cliente';
-$sector     = isset($input['sector'])   ? (int)$input['sector']   : 1;
+$sector     = (isset($input['sector']) && $input['sector'] !== null && $input['sector'] !== '')
+              ? (int)$input['sector'] : null;
 $latitud    = isset($input['latitud'])  ? (float)$input['latitud']  : null;
 $longitud   = isset($input['longitud']) ? (float)$input['longitud'] : null;
 $notas      = trim($input['notas'] ?? '');
@@ -24,38 +25,37 @@ if ($latitud === null || $longitud === null) {
     exit;
 }
 
-if (!in_array($tipo, ['cliente', 'valvula'], true)) {
+if (!in_array($tipo, ['cliente', 'valvula', 'tubo', 'conexion'], true)) {
     http_response_code(400);
     echo json_encode(["error" => true, "message" => "tipo invalido"]);
     exit;
 }
 
-if (!in_array($sector, [1, 2, 3], true)) {
-    http_response_code(400);
-    echo json_encode(["error" => true, "message" => "sector invalido"]);
-    exit;
+// Sector opcional (NULL = pendiente). Si viene, debe ser 1, 2 o 3.
+if ($sector !== null && !in_array($sector, [1, 2, 3], true)) {
+    $sector = null;
 }
 
 // ══════════════════════════════════════════════════════════════
-//  VÁLVULA — siempre inserta nueva, nunca actualiza
+//  INFRAESTRUCTURA (válvula/tubo/conexión) — siempre inserta nueva
 // ══════════════════════════════════════════════════════════════
-if ($tipo === 'valvula') {
+if ($tipo !== 'cliente') {
     $stmt = $conn->prepare("
         INSERT INTO ubicaciones (tipo, sector, latitud, longitud, notas, creado_por)
-        VALUES ('valvula', ?, ?, ?, ?, ?)
+        VALUES (?, ?, ?, ?, ?, ?)
     ");
-    $stmt->bind_param("iddsi", $sector, $latitud, $longitud, $notas, $creado_por);
+    $stmt->bind_param("siddsi", $tipo, $sector, $latitud, $longitud, $notas, $creado_por);
 
     if (!$stmt->execute()) {
         http_response_code(500);
-        echo json_encode(["error" => true, "message" => "Error al guardar válvula: " . $stmt->error]);
+        echo json_encode(["error" => true, "message" => "Error al guardar: " . $stmt->error]);
         $stmt->close(); $conn->close(); exit;
     }
 
     $id = $stmt->insert_id;
     $stmt->close();
     $conn->close();
-    echo json_encode(["error" => false, "message" => "Válvula guardada", "id" => $id]);
+    echo json_encode(["error" => false, "message" => "Ubicación guardada", "id" => $id]);
     exit;
 }
 

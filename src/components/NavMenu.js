@@ -246,13 +246,19 @@ export default function NavMenu() {
       )
     );
 
+  // Inicio del rol actual (admin → /Admin, caja → /Caja, etc.)
+  const rolActual = user?.rol?.toString() || "";
+  const homePath = rolActual
+    ? `/${rolActual.charAt(0).toUpperCase()}${rolActual.slice(1)}`
+    : "/login";
+
   return (
     <nav ref={navRef} style={n.nav}>
-      {/* ── Brand ── */}
-      <div style={n.brand}>
-        <FaTint size={16} style={{ marginRight: 7 }} />
+      {/* ── Brand / Botón Home ── */}
+      <Link to={homePath} style={n.brand} title="Ir al inicio">
+        <FaHome size={16} style={{ marginRight: 7 }} />
         Comité del Agua
-      </div>
+      </Link>
 
       {/* ── Desktop: links horizontales ── */}
       {!isMobile && (
@@ -316,6 +322,8 @@ const n = {
     display: "flex",
     alignItems: "center",
     whiteSpace: "nowrap",
+    textDecoration: "none",
+    cursor: "pointer",
   },
 
   /* ── Desktop ── */

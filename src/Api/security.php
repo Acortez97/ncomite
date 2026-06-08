@@ -20,6 +20,7 @@ define('TABLAS_PERMITIDAS', [
     'user_admin',
     'roles',
     'ubicaciones',
+    'trazado_red',
 ]);
 
 /**
